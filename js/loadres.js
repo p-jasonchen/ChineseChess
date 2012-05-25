@@ -61,7 +61,7 @@ var DownloadControler={};
 			type:'img',
 			path:'img/',
 			resArray:[			
-				'chesspanel.png',		'r_jiang.png',		'r_shi.png',
+				'chesspanel.png',	'r_jiang.png',		'r_shi.png',
 				'r_xiang.png',		'r_che.png',		'r_ma.png',
 				'r_pao.png',		'r_zu.png',		'b_zu.png',
 				'b_pao.png',		'b_jiang.png',		'b_ma.png',

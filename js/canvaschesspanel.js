@@ -34,19 +34,52 @@
 			CanvasChessPanel.width = 320;
 			CanvasChessPanel.height = 480;			
 			 
+
+			
 			CanvasChessPanel.draw = function () {
-		    	var c = this.con, d = 1000;		    	
-		    	c.clearRect(0, 0, d, d);
-		    	var image = new Image();
+		    	var c = this.con;	
+		    	if(this.chessPanelImg){			    	  	
+		    		c.drawImage(this.chessPanelImg, 0, 0); 
+		    	} 
+		    	var that = this;			    	
+			    var pieces = that.pieces;			    	
+			    if(pieces){
+			    	c.translate(- that.trans.x , -that.trans.y);
+			    	for(var i = 0; i < pieces.length; i++){
+			    		cur = pieces[i];
+			    		image = new Image();
+			    		image.src = 'img/' + cur.src;
+			    		c.drawImage(image, cur.xCenter, cur.yCenter);
+			    	}
+			    	
+			    	var selected = that.selected;
+			    	if(selected){
+			    		var border = {
+							xPos		: selected.xCenter,
+							yPos		: selected.yCenter,
+							borderWidth : 2 * that.trans.x,
+							borderHeight : 2 * that.trans.y,
+						};
+						that.con.strokeStyle = "rgb(255,0,0)";
+						//之前设置的translate依然有效
+						that.con.strokeRect(border.xPos, border.yPos, border.borderWidth, border.borderHeight);
+			    	}
+			    	c.translate( that.trans.x , that.trans.y);
+			    	
+		    	}	
+			};
+			
+			CanvasChessPanel.preDraw = function(){
+				var image = new Image();
 		    	image.src = 'img/chesspanel.png';
 		    	var that = this;
+		    	var c = this.con;
 		    	image.onload = function(){	
 		    		//棋盘缩放系数
 		    		var xScale = (that.width / image.naturalWidth);	    		
 		    		var yScale = (that.height / image.naturalHeight);		    		
 		    		c.scale(xScale,yScale);
-			    	c.drawImage(image, 0, 0);   
-			    	
+		    		that.chessPanelImg = image;			    	
 			    	var pieces = that.pieces;			    	
 			    	if(pieces){
 			    		var cur = pieces[0];
@@ -55,32 +88,12 @@
 			    		var trans = {
 			    			x : image.naturalWidth /2,
 			    			y : image.naturalHeight / 2,
-			    		};
-			    		c.translate(- trans.x , -trans.y);
+			    		};			    		
 			    		that.trans = trans;
-			    		for(var i = 0; i < pieces.length; i++){
-			    			cur = pieces[i];
-			    			image = new Image();
-			    			image.src = 'img/' + cur.src;
-			    			c.drawImage(image, cur.xCenter, cur.yCenter);
-			    		}
-			    		
-			    		var selected = that.selected;
-			    		if(selected){
-			    			var border = {
-								xPos		: selected.xCenter,
-								yPos		: selected.yCenter,
-								borderWidth : 2 * that.trans.x,
-								borderHeight : 2 * that.trans.y,
-							};
-							that.con.strokeStyle = "rgb(255,0,0)";
-							//之前设置的translate依然有效
-							that.con.strokeRect(border.xPos, border.yPos, border.borderWidth, border.borderHeight);
-			    		}
 			    	}
-			    	
-			    	
-		    	}	
+			    	that.draw();
+			    }
+				
 			};
 			
 			CanvasChessPanel.setMousedownCallBack = function(){
@@ -122,10 +135,11 @@
 					height : this.height
 				});	
 				
+				this.preDraw();
 				//this.setMousedownCallBack();
 				this.setClickCallBack();
 				//absoluteCenter(this.can);			
-			this.setColor('#a8a5a8');	
+			//this.setColor('#a8a5a8');	
 			this.show();
 				
 			}
