@@ -46,7 +46,7 @@
 			    if(pieces){
 			    	c.translate(- that.trans.x , -that.trans.y);
 			    	for(var i = 0; i < pieces.length; i++){
-			    		cur = pieces[i];			    		
+			    		var cur = pieces[i];			    		
 			    		c.drawImage(cur.image, cur.xCenter, cur.yCenter);
 			    	}
 			    	
@@ -88,6 +88,7 @@
 			    			y : image.naturalHeight / 2,
 			    		};			    		
 			    		that.trans = trans;
+			    		ChineseChess.trans = trans;
 			    		
 			    		for(var i = 0; i < pieces.length; i++){
 				    		cur = pieces[i];
@@ -118,7 +119,12 @@
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
 					//console.log('click canvasX=' + canvasX);
 					//console.log('click canvasY=' + canvasY);
-					
+					if(that.selected){						
+						that.selected.go({posX : canvasX, posY : canvasY});
+						that.selected = null;
+						that.redraw();
+						return;
+					}
 					var cur;
 					for(var i = 0; i < that.pieces.length; i++){
 						cur = that.pieces[i];

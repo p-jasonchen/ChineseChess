@@ -5,14 +5,6 @@
 var ChineseChess={};	
 (function(chess){
 	
-	var Piece = function(opt){		
-		for(var key in opt){
-			this[key] = opt[key];
-		}	
-		
-		Piece.prototype.go = function(opt){};
-	}
-	
 	//棋盘横线偏移
 	var hOffset = [80,116,152,186,222,257,292,327,362,398];
 	//棋盘纵线偏移
@@ -20,12 +12,55 @@ var ChineseChess={};
 	
 	var RED = 0, BLACK = 1;
 	
+	var Piece = function(opt){		
+		for(var key in opt){
+			this[key] = opt[key];
+		}	
+		
+		Piece.prototype.getCenterXY = function(opt){
+			var posX = opt.posX, posY = opt.posY;
+			var xCenter = vOffset[0], yCenter = hOffset[0];
+			var i,j;
+			for(i = 0; i < vOffset.length; i++){				
+				if(Math.abs(vOffset[i] - posX) <= ChineseChess.trans.x){
+					xCenter = vOffset[i]; break;
+				}
+			}
+			if(i == vOffset.length)
+				xCenter = vOffset[i - 1];
+				
+			for(j = 0; j < hOffset.length; j++){				
+				if(Math.abs(hOffset[j] - posY) <= ChineseChess.trans.y){
+						yCenter = hOffset[j]; break;
+					}
+				}
+			if(j == hOffset.length)
+				yCenter = hOffset[j - 1];
+				
+			return {
+				xCenter : xCenter,
+				yCenter : yCenter,
+			}
+			
+		}
+		
+		Piece.prototype.go = function(opt){};
+	}
+	
+	
+	
 	var Che = function(opt){
 		var p = new Piece(opt);		
 		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
 		
 		p.go = function(opt){
-			
+			var result = this.getCenterXY(opt);
+			if(result.xCenter != this.xCenter && result.yCenter != this.yCenter)
+				alert('error go pos');
+			else{
+				this.xCenter = result.xCenter;
+				this.yCenter = result.yCenter;
+			}
 		};
 		return p;
 	}
@@ -86,7 +121,6 @@ var ChineseChess={};
 	
 	
 	var redPieces = [], blackPieces = [];
-	var pieceSize = 16;
 	var i, xCenter, yCenter, piece;
 	var func = [Che, Ma, Xiang, Shi, Jiang, Shi, Xiang, Ma, Che];
 	//车马象士帅
