@@ -46,10 +46,8 @@
 			    if(pieces){
 			    	c.translate(- that.trans.x , -that.trans.y);
 			    	for(var i = 0; i < pieces.length; i++){
-			    		cur = pieces[i];
-			    		image = new Image();
-			    		image.src = 'img/' + cur.src;
-			    		c.drawImage(image, cur.xCenter, cur.yCenter);
+			    		cur = pieces[i];			    		
+			    		c.drawImage(cur.image, cur.xCenter, cur.yCenter);
 			    	}
 			    	
 			    	var selected = that.selected;
@@ -90,6 +88,13 @@
 			    			y : image.naturalHeight / 2,
 			    		};			    		
 			    		that.trans = trans;
+			    		
+			    		for(var i = 0; i < pieces.length; i++){
+				    		cur = pieces[i];
+				    		image = new Image();
+				    		image.src = 'img/' + cur.src;
+				    		cur.image = image;
+			    		}
 			    	}
 			    	that.draw();
 			    }
@@ -101,8 +106,8 @@
 					$(window).mousedown(function(e) {
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
-					console.log('mousedown canvasX=' + canvasX);
-					console.log('mousedown canvasY=' + canvasY);
+					//console.log('mousedown canvasX=' + canvasX);
+					//console.log('mousedown canvasY=' + canvasY);
 				});
 			};
 
@@ -111,14 +116,17 @@
 					$(window).click(function(e) {
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
-					console.log('click canvasX=' + canvasX);
-					console.log('click canvasY=' + canvasY);
+					//console.log('click canvasX=' + canvasX);
+					//console.log('click canvasY=' + canvasY);
 					
 					var cur;
 					for(var i = 0; i < that.pieces.length; i++){
 						cur = that.pieces[i];
 						if(Math.abs(cur.xCenter - canvasX) < that.trans.x && Math.abs(cur.yCenter - canvasY) < that.trans.y){
-							that.selected = cur;	
+							if(that.selected === cur)
+								that.selected = null;
+							else	
+								that.selected = cur;
 							that.redraw();						
 							return;
 						}
