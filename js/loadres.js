@@ -70,9 +70,12 @@ var DownloadControler={};
 		};	
 		
 		img.onFinish = function(){
-			var opt = {};
-	    	opt.id = 'canvasChessPanel';
-			var chessPanel = new CanvasChessPanel('chess_frame', opt);
+			var opt = {
+				id : 'canvasChessPanel',				
+			};
+			var chessPanel = new CanvasChessPanel('chess_frame', opt);		
+			chessPanel.pieces =  ChineseChess.pieces,
+			window.chessPanel = chessPanel;
 		}	
 		
 		return img;

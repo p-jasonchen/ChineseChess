@@ -32,10 +32,7 @@
 			
 			var CanvasChessPanel = new CanvasWrapper(id, opt);
 			CanvasChessPanel.width = 320;
-			CanvasChessPanel.height = 480;		
-			
-				
-			
+			CanvasChessPanel.height = 480;			
 			 
 			CanvasChessPanel.draw = function () {
 		    	var c = this.con, d = 1000;		    	
@@ -44,10 +41,25 @@
 		    	image.src = 'img/chesspanel.png';
 		    	var that = this;
 		    	image.onload = function(){	
+		    		//棋盘缩放系数
 		    		var xScale = (that.width / image.naturalWidth);	    		
-		    		var yScale = (that.height / image.naturalHeight);
+		    		var yScale = (that.height / image.naturalHeight);		    		
 		    		c.scale(xScale,yScale);
 			    	c.drawImage(image, 0, 0);   
+			    	
+			    	var pieces = that.pieces;			    	
+			    	if(pieces){
+			    		var cur = pieces[0];
+			    		image = new Image();
+			    		image.src = 'img/' + cur.src;
+			    		c.translate(- image.naturalWidth /2 , -image.naturalHeight / 2);
+			    		for(var i = 0; i < pieces.length; i++){
+			    			cur = pieces[i];
+			    			image = new Image();
+			    			image.src = 'img/' + cur.src;
+			    			c.drawImage(image, cur.xCenter, cur.yCenter);
+			    		}
+			    	}
 		    	}	
 			};
 			
