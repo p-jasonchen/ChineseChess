@@ -65,7 +65,8 @@ var DownloadControler={};
 				'r_xiang.png',		'r_che.png',		'r_ma.png',
 				'r_pao.png',		'r_zu.png',		'b_zu.png',
 				'b_pao.png',		'b_jiang.png',		'b_ma.png',
-				'b_shi.png',		'b_xiang.png',		'b_che.png',			
+				'b_shi.png',		'b_xiang.png',		'b_che.png',	
+				'ready.png',		'newgame.png',		
 			]
 		};	
 		

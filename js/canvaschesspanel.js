@@ -60,7 +60,19 @@
 			    			c.drawImage(image, cur.xCenter, cur.yCenter);
 			    		}
 			    	}
+			    	
+			    	
 		    	}	
+			};
+			
+			CanvasChessPanel.mousedownCallBack = function(){
+					var that = this;
+					$(window).mousedown(function(e) {
+					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
+					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
+					console.log('canvasX=' + canvasX);
+					console.log('canvasY=' + canvasY);
+				});
 			};
 			
 			CanvasChessPanel.Config = function(){
@@ -73,6 +85,7 @@
 					height : this.height
 				});	
 				
+				this.mousedownCallBack();
 				//absoluteCenter(this.can);			
 			this.setColor('#a8a5a8');	
 			this.show();
@@ -80,6 +93,10 @@
 			}
 			
 			CanvasChessPanel.Config();
+			
+			
+			
+			
 			
 			
 			return CanvasChessPanel;
