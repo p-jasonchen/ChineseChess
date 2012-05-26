@@ -11,6 +11,9 @@ var ChineseChess={};
 	var vOffset = [20,55,90,125,160,195,230,265,300];
 	
 	var RED = 0, BLACK = 1;
+	var GO = 0, BEAT = 1;
+	
+	var redPieces = [], blackPieces = [];
 	
 	var Piece = function(opt){		
 		for(var key in opt){
@@ -44,29 +47,128 @@ var ChineseChess={};
 			
 		}
 		
-		Piece.prototype.go = function(opt){};
+		Piece.prototype.isLegal = function(objPos){};
+		Piece.prototype.go = function(opt){
+			var result = this.getCenterXY(opt);
+			this.isLegal(result);
+		};
 	}
 	
 	
 	
 	var Che = function(opt){
-		var p = new Piece(opt);		
+		var p = Che.prototype = new Piece(opt);		
 		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
 		
-		p.go = function(opt){
-			var result = this.getCenterXY(opt);
-			if(result.xCenter != this.xCenter && result.yCenter != this.yCenter)
-				alert('error go pos');
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
+			if(objPos.xCenter != this.xCenter && objPos.yCenter != this.yCenter)
+				legal = false;
 			else{
-				this.xCenter = result.xCenter;
-				this.yCenter = result.yCenter;
+				var cur, opponent, myself;
+				if(this.type == RED){
+					opponent = blackPieces;
+					myself = redPieces;
+				}else{
+					opponent = redPieces;
+					myself = blackPieces;
+				}
+				var opUp,opDown,myUp,myDown;
+				//纵向走子
+				if(objPos.xCenter == this.xCenter){					
+					for(var i = 0; i < opponent.length; i ++){
+						cur = opponent[i];
+						if(cur.xCenter == this.xCenter){
+							if(cur.yCenter > this.yCenter){
+								opDown = cur;
+								if(opDown && opDown.yCenter < cur.yCenter)
+									opDown = cur;
+							}else{
+								opUp = cur;
+								if(opUp && opUp.yCenter > cur.yCenter)
+									opUp = cur;
+							}
+						}
+					}
+					
+					for(var i = 0; i < myself.length; i ++){
+						cur = myself[i];
+						if(cur.xCenter == this.xCenter){
+							if(cur.yCenter > this.yCenter){
+								myDown = cur;
+								if(myDown && myDown.yCenter < cur.yCenter)
+									myDown = cur;
+							}else{
+								myUp = cur;
+								if(myUp && myUp.yCenter > cur.yCenter)
+									myUp = cur;
+							}
+						}
+					}
+					
+					//向下走子
+					if(objPos.yCenter > this.yCenter){
+						if(opDown && myDown){
+							//自己的子在上方
+							if(opDown.yCenter > myDown.yCenter){
+								if(objPos.yCenter < myDown.yCenter){
+									legal = true;
+									action = GO;
+								}else{
+									legal = false;
+								}
+							}else if(opDown.yCenter < myDown.yCenter){	//自己的子在下方
+								if(objPos.yCenter < opDown.yCenter){
+									legal = true;
+									action = GO;
+								}else  if(objPos.yCenter == opDown.yCenter){
+									legal = true;
+									action = BEAT;
+								}else{
+									legal = false;
+								}
+							}
+						}
+					}else if(objPos.yCenter < this.yCenter){	//向上走子
+						if(opUp && myUp){
+							//自己的子在下方
+							if(opUp.yCenter < myUp.yCenter){
+								if(objPos.yCenter > myUp.yCenter){
+									legal = true;
+									action = GO;
+								}else{
+									legal = false;
+								}
+							}else if(opUp.yCenter > myUp.yCenter){	//自己的子在上方
+								if(objPos.yCenter > opUp.yCenter){
+									legal = true;
+									action = GO;
+								}else  if(objPos.yCenter == opUp.yCenter){
+									legal = true;
+									action = BEAT;
+								}else{
+									legal = false;
+								}
+							}
+						}
+					}
+				}else{
+					
+				}
+				
+				if(legal){
+					this.xCenter = objPos.xCenter;
+					this.yCenter = objPos.yCenter;
+				}else{
+					alert('illegal go');
+				}
 			}
 		};
 		return p;
 	}
 	
 	var Ma = function(opt){
-		var p = new Piece(opt);
+		var p = Ma.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_ma.png' : p.src = 'b_ma.png';
 		p.go = function(opt){
 			
@@ -75,7 +177,7 @@ var ChineseChess={};
 	}
 	
 	var Xiang = function(opt){
-		var p = new Piece(opt);
+		var p = Xiang.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_xiang.png' : p.src = 'b_xiang.png';
 		p.go = function(opt){
 			
@@ -84,7 +186,7 @@ var ChineseChess={};
 	}
 	
 	var Shi = function(opt){
-		var p = new Piece(opt);
+		var p = Shi.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_shi.png' : p.src = 'b_shi.png';
 		p.go = function(opt){
 			
@@ -93,7 +195,7 @@ var ChineseChess={};
 	}
 	
 	var Jiang = function(opt){
-		var p = new Piece(opt);
+		var p = Jiang.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_jiang.png' : p.src = 'b_jiang.png';
 		p.go = function(opt){
 			
@@ -102,7 +204,7 @@ var ChineseChess={};
 	}
 	
 	var Pao = function(opt){
-		var p = new Piece(opt);
+		var p = Pao.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_pao.png' : p.src = 'b_pao.png';
 		p.go = function(opt){
 			
@@ -111,7 +213,7 @@ var ChineseChess={};
 	}
 	
 	var Zu = function(opt){
-		var p = new Piece(opt);
+		var p = Zu.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_zu.png' : p.src = 'b_zu.png';
 		p.go = function(opt){
 			
@@ -120,7 +222,7 @@ var ChineseChess={};
 	}	
 	
 	
-	var redPieces = [], blackPieces = [];
+	
 	var i, xCenter, yCenter, piece;
 	var func = [Che, Ma, Xiang, Shi, Jiang, Shi, Xiang, Ma, Che];
 	//车马象士帅
@@ -178,7 +280,7 @@ var ChineseChess={};
 			type	: BLACK,
 		});
 		blackPieces.push(piece);
-	}
+	}	
 	
 	chess.pieces = redPieces.concat(blackPieces);
 	
