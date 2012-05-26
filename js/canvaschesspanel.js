@@ -122,28 +122,29 @@
 					$(window).click(function(e) {
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
-					if(that.selected){						
-						var ret = that.selected.go({posX : canvasX, posY : canvasY});
-						if(ret && ret.legal){
-							
-							
-						}else{
-							alert('illegal go');
-						}
-						that.selected = null;
+					if(that.selected){	
+						var objPos = that.selected.getCenterXY({posX : canvasX, posY : canvasY});	
+						if(that.selected.xCoor == objPos.xCoor && that.selected.yCoor == objPos.yCoor)	
+							that.selected = null;	
+						else{
+							var ret = that.selected.go({posX : canvasX, posY : canvasY});
+							if(ret && ret.legal){								
+							}else{
+								alert('illegal go');
+							}
+							that.selected = null;
+						}						
 						that.redraw();
 						return;
 					}
 					var cur;
 					for(var i = 0; i < that.pieces.length; i++){
 						cur = that.pieces[i];
+						if(!cur.alive) continue;
 						xCenter = ChineseChess.vOffset[cur.xCoor];	
 			    		yCenter = ChineseChess.hOffset[cur.yCoor];	 
 						if(Math.abs(xCenter - canvasX) < that.trans.x && Math.abs(yCenter - canvasY) < that.trans.y){
-							if(that.selected === cur)
-								that.selected = null;
-							else	
-								that.selected = cur;
+							that.selected = cur;
 							that.redraw();						
 							return;
 						}
