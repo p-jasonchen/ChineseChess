@@ -59,101 +59,154 @@ var ChineseChess={};
 	var Che = function(opt){
 		var p = Che.prototype = new Piece(opt);		
 		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
+		/**
+		 * 
+		 * @param {Object} goDirKey 判断走子方向的key,如果为xCenter则为纵向，对应的opGoDirKey值为yCenter。
+		 * @param {Object} opGoDirKey
+		 */
+		Che.prototype.getAdjacent = function(goDirKey, opGoDirKey){
+			var cur, opponent, myself;
+			if(this.type == RED){
+				opponent = blackPieces;
+				myself = redPieces;
+			}else{
+				opponent = redPieces;
+				myself = blackPieces;
+			}
+			//lower表示相对左上位置，greater表示相对右下位置	
+			var opLower,opGreater,myLower,myGreater;				
+			for(var i = 0; i < opponent.length; i ++){
+				cur = opponent[i];
+				if(cur !== this && cur[goDirKey] == this[goDirKey]){
+					if(cur[opGoDirKey] > this[opGoDirKey]){
+						if(!opGreater || cur[opGoDirKey] < opGreater[opGoDirKey] )
+							opGreater = cur;
+					}else{
+						if(!opLower || cur[opGoDirKey] > opLower[opGoDirKey])
+							opLower = cur;
+					}
+				}
+			}
+			
+			for(var i = 0; i < myself.length; i ++){
+				cur = myself[i];
+				if(cur !== this && cur[goDirKey] == this[goDirKey]){
+					if(cur[opGoDirKey] > this[opGoDirKey]){						
+						 if(!myGreater || cur[opGoDirKey] < myGreater[opGoDirKey])
+							myGreater = cur;
+					}else{
+						if(!myLower || cur[opGoDirKey] > myLower[opGoDirKey])
+							myLower = cur;
+					}
+				}
+			}
+			return {opLower: opLower, opGreater: opGreater, myLower: myLower, myGreater: myGreater};
+		}
+		
+		Che.prototype.isLegalByDirection = function(objPos, opGoDirKey, adj){
+			var opLower = adj.opLower ,opGreater = adj.opGreater ,myLower = adj.myLower, myGreater = adj.myGreater;	
+			var legal = true, action = GO;
+			//向下走子
+			if(objPos[opGoDirKey] > this[opGoDirKey] ){
+				if(opGreater && myGreater){
+					//自己的子在上方
+					if(opGreater[opGoDirKey]  > myGreater[opGoDirKey] ){
+						if(objPos[opGoDirKey]  < myGreater[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else{
+							legal = false;
+						}
+					}else if(opGreater[opGoDirKey]  < myGreater[opGoDirKey] ){	//自己的子在下方
+						if(objPos[opGoDirKey]  < opGreater[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
+							legal = true;
+							action = BEAT;
+						}else{
+							legal = false;
+						}
+					}
+				}else if(opGreater){
+					if(objPos[opGoDirKey]  < opGreater[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
+							legal = true;
+							action = BEAT;
+						}else{
+							legal = false;
+						}
+				}else if(myGreater){
+					if(objPos[opGoDirKey]  < myGreater[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else{
+							legal = false;
+						}
+				}
+			}else if(objPos[opGoDirKey]  < this[opGoDirKey] ){	//向上走子
+				if(opLower && myLower){
+					//自己的子在下方
+					if(opLower[opGoDirKey]  < myLower[opGoDirKey] ){
+						if(objPos[opGoDirKey]  > myLower[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else{
+							legal = false;
+						}
+					}else if(opLower[opGoDirKey]  > myLower[opGoDirKey] ){	//自己的子在上方
+						if(objPos[opGoDirKey]  > opLower[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
+							legal = true;
+							action = BEAT;
+						}else{
+							legal = false;
+						}
+					}
+				}else if(opLower){
+					if(objPos[opGoDirKey]  > opLower[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
+							legal = true;
+							action = BEAT;
+						}else{
+							legal = false;
+						}
+				}else if(myLower){
+					if(objPos[opGoDirKey]  > myLower[opGoDirKey] ){
+							legal = true;
+							action = GO;
+						}else{
+							legal = false;
+						} 	
+				}
+			}
+			
+			return {legal : legal, action : action};
+		}
 		
 		p.isLegal = function(objPos){
 			var legal = true, action = GO;
 			if(objPos.xCenter != this.xCenter && objPos.yCenter != this.yCenter)
 				legal = false;
 			else{
-				var cur, opponent, myself;
-				if(this.type == RED){
-					opponent = blackPieces;
-					myself = redPieces;
-				}else{
-					opponent = redPieces;
-					myself = blackPieces;
-				}
-				var opUp,opDown,myUp,myDown;
+				var adj, ret;
 				//纵向走子
-				if(objPos.xCenter == this.xCenter){					
-					for(var i = 0; i < opponent.length; i ++){
-						cur = opponent[i];
-						if(cur.xCenter == this.xCenter){
-							if(cur.yCenter > this.yCenter){
-								opDown = cur;
-								if(opDown && opDown.yCenter < cur.yCenter)
-									opDown = cur;
-							}else{
-								opUp = cur;
-								if(opUp && opUp.yCenter > cur.yCenter)
-									opUp = cur;
-							}
-						}
-					}
-					
-					for(var i = 0; i < myself.length; i ++){
-						cur = myself[i];
-						if(cur.xCenter == this.xCenter){
-							if(cur.yCenter > this.yCenter){
-								myDown = cur;
-								if(myDown && myDown.yCenter < cur.yCenter)
-									myDown = cur;
-							}else{
-								myUp = cur;
-								if(myUp && myUp.yCenter > cur.yCenter)
-									myUp = cur;
-							}
-						}
-					}
-					
-					//向下走子
-					if(objPos.yCenter > this.yCenter){
-						if(opDown && myDown){
-							//自己的子在上方
-							if(opDown.yCenter > myDown.yCenter){
-								if(objPos.yCenter < myDown.yCenter){
-									legal = true;
-									action = GO;
-								}else{
-									legal = false;
-								}
-							}else if(opDown.yCenter < myDown.yCenter){	//自己的子在下方
-								if(objPos.yCenter < opDown.yCenter){
-									legal = true;
-									action = GO;
-								}else  if(objPos.yCenter == opDown.yCenter){
-									legal = true;
-									action = BEAT;
-								}else{
-									legal = false;
-								}
-							}
-						}
-					}else if(objPos.yCenter < this.yCenter){	//向上走子
-						if(opUp && myUp){
-							//自己的子在下方
-							if(opUp.yCenter < myUp.yCenter){
-								if(objPos.yCenter > myUp.yCenter){
-									legal = true;
-									action = GO;
-								}else{
-									legal = false;
-								}
-							}else if(opUp.yCenter > myUp.yCenter){	//自己的子在上方
-								if(objPos.yCenter > opUp.yCenter){
-									legal = true;
-									action = GO;
-								}else  if(objPos.yCenter == opUp.yCenter){
-									legal = true;
-									action = BEAT;
-								}else{
-									legal = false;
-								}
-							}
-						}
-					}
-				}else{
-					
+				if(objPos.xCenter == this.xCenter){	
+					adj =this.getAdjacent('xCenter','yCenter');
+					ret = this.isLegalByDirection(objPos,'yCenter', adj);					
+				}else if(objPos.yCenter == this.yCenter){
+					adj = this.getAdjacent('yCenter','xCenter');
+					ret = this.isLegalByDirection(objPos,'xCenter', adj);
+				}
+				if(ret){
+					legal = ret.legal;
+					action = ret.action;
 				}
 				
 				if(legal){
