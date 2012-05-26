@@ -18,53 +18,42 @@ var ChineseChess={};
 	var Piece = function(opt){		
 		for(var key in opt){
 			this[key] = opt[key];
-		}	
+		}
+		this.alive = true;
 		
 		Piece.prototype.getCenterXY = function(opt){
 			var posX = opt.posX, posY = opt.posY;
-			var xCenter = vOffset[0], yCenter = hOffset[0];
+			var xCoor = vOffset[0], yCoor = hOffset[0];
 			var i,j;
 			for(i = 0; i < vOffset.length; i++){				
 				if(Math.abs(vOffset[i] - posX) <= ChineseChess.trans.x){
-					xCenter = vOffset[i]; break;
+					break;
 				}
 			}
 			if(i == vOffset.length)
-				xCenter = vOffset[i - 1];
+				i--;
 				
 			for(j = 0; j < hOffset.length; j++){				
 				if(Math.abs(hOffset[j] - posY) <= ChineseChess.trans.y){
-						yCenter = hOffset[j]; break;
-					}
+						break;
 				}
+			}
 			if(j == hOffset.length)
-				yCenter = hOffset[j - 1];
+				j--;
 				
 			return {
-				xCenter : xCenter,
-				yCenter : yCenter,
+				xCoor	:i,
+				yCoor	:j,
 			}
 			
 		}
 		
-		Piece.prototype.isLegal = function(objPos){};
-		Piece.prototype.go = function(opt){
-			var result = this.getCenterXY(opt);
-			this.isLegal(result);
-		};
-	}
-	
-	
-	
-	var Che = function(opt){
-		var p = Che.prototype = new Piece(opt);		
-		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
 		/**
 		 * 
-		 * @param {Object} goDirKey 判断走子方向的key,如果为xCenter则为纵向，对应的opGoDirKey值为yCenter。
+		 * @param {Object} goDirKey 判断走子方向的key,如果为xCoor则为纵向，对应的opGoDirKey值为yCoor。
 		 * @param {Object} opGoDirKey
 		 */
-		Che.prototype.getAdjacent = function(goDirKey, opGoDirKey){
+		Piece.prototype.getAdjacent = function(goDirKey, opGoDirKey){
 			var cur, opponent, myself;
 			if(this.type == RED){
 				opponent = blackPieces;
@@ -77,7 +66,7 @@ var ChineseChess={};
 			var opLower,opGreater,myLower,myGreater;				
 			for(var i = 0; i < opponent.length; i ++){
 				cur = opponent[i];
-				if(cur !== this && cur[goDirKey] == this[goDirKey]){
+				if(cur.alive && cur !== this && cur[goDirKey] == this[goDirKey]){
 					if(cur[opGoDirKey] > this[opGoDirKey]){
 						if(!opGreater || cur[opGoDirKey] < opGreater[opGoDirKey] )
 							opGreater = cur;
@@ -90,7 +79,7 @@ var ChineseChess={};
 			
 			for(var i = 0; i < myself.length; i ++){
 				cur = myself[i];
-				if(cur !== this && cur[goDirKey] == this[goDirKey]){
+				if(cur.alive && cur !== this && cur[goDirKey] == this[goDirKey]){
 					if(cur[opGoDirKey] > this[opGoDirKey]){						
 						 if(!myGreater || cur[opGoDirKey] < myGreater[opGoDirKey])
 							myGreater = cur;
@@ -103,7 +92,7 @@ var ChineseChess={};
 			return {opLower: opLower, opGreater: opGreater, myLower: myLower, myGreater: myGreater};
 		}
 		
-		Che.prototype.isLegalByDirection = function(objPos, opGoDirKey, adj){
+		Piece.prototype.isLegalByDirectionPublic = function(objPos, opGoDirKey, adj){
 			var opLower = adj.opLower ,opGreater = adj.opGreater ,myLower = adj.myLower, myGreater = adj.myGreater;	
 			var legal = true, action = GO;
 			//向下走子
@@ -124,6 +113,7 @@ var ChineseChess={};
 						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
 							legal = true;
 							action = BEAT;
+							opGreater.alive = false;
 						}else{
 							legal = false;
 						}
@@ -135,6 +125,7 @@ var ChineseChess={};
 						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
 							legal = true;
 							action = BEAT;
+							opGreater.alive = false;
 						}else{
 							legal = false;
 						}
@@ -163,6 +154,7 @@ var ChineseChess={};
 						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
 							legal = true;
 							action = BEAT;
+							opLower.alive = false;
 						}else{
 							legal = false;
 						}
@@ -174,6 +166,7 @@ var ChineseChess={};
 						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
 							legal = true;
 							action = BEAT;
+							opLower.alive = false;
 						}else{
 							legal = false;
 						}
@@ -186,23 +179,19 @@ var ChineseChess={};
 						} 	
 				}
 			}
-			
 			return {legal : legal, action : action};
 		}
 		
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			if(objPos.xCenter != this.xCenter && objPos.yCenter != this.yCenter)
-				legal = false;
-			else{
-				var adj, ret;
+		Piece.prototype._isLegalPrivate = function(objPos){};
+		Piece.prototype._isLegalPublic = function(objPos){
+			var adj, ret;
 				//纵向走子
-				if(objPos.xCenter == this.xCenter){	
-					adj =this.getAdjacent('xCenter','yCenter');
-					ret = this.isLegalByDirection(objPos,'yCenter', adj);					
-				}else if(objPos.yCenter == this.yCenter){
-					adj = this.getAdjacent('yCenter','xCenter');
-					ret = this.isLegalByDirection(objPos,'xCenter', adj);
+				if(objPos.xCoor == this.xCoor){	
+					adj =this.getAdjacent('xCoor','yCoor');
+					ret = this.isLegalByDirectionPublic(objPos,'yCoor', adj);					
+				}else if(objPos.yCoor == this.yCoor){
+					adj = this.getAdjacent('yCoor','xCoor');
+					ret = this.isLegalByDirectionPublic(objPos,'xCoor', adj);
 				}
 				if(ret){
 					legal = ret.legal;
@@ -210,12 +199,36 @@ var ChineseChess={};
 				}
 				
 				if(legal){
-					this.xCenter = objPos.xCenter;
-					this.yCenter = objPos.yCenter;
-				}else{
-					alert('illegal go');
+					for(var key in objPos){
+						this[key] = objPos[key];
+					}
 				}
-			}
+				return ret;
+		};
+
+		
+		Piece.prototype.go = function(opt){
+			var objPos = this.getCenterXY(opt);
+			var private =  this._isLegalPrivate(objPos);
+			if(private.legal)			
+				return this._isLegalPublic(objPos);
+			else
+				return private;
+		};
+	}
+	
+	
+	
+	var Che = function(opt){
+		var p = Che.prototype = new Piece(opt);		
+		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
+		p._isLegalPrivate = function(objPos){
+			chess.debug('che');
+			var legal = true, action = GO;
+			if(objPos.xCoor != this.xCoor && objPos.yCoor != this.yCoor)
+				legal = false;
+			return {legal : legal, action : action};
+			
 		};
 		return p;
 	}
@@ -223,7 +236,8 @@ var ChineseChess={};
 	var Ma = function(opt){
 		var p = Ma.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_ma.png' : p.src = 'b_ma.png';
-		p.go = function(opt){
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
 			
 		};
 		return p;
@@ -232,7 +246,8 @@ var ChineseChess={};
 	var Xiang = function(opt){
 		var p = Xiang.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_xiang.png' : p.src = 'b_xiang.png';
-		p.go = function(opt){
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
 			
 		};
 		return p;
@@ -241,7 +256,8 @@ var ChineseChess={};
 	var Shi = function(opt){
 		var p = Shi.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_shi.png' : p.src = 'b_shi.png';
-		p.go = function(opt){
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
 			
 		};
 		return p;
@@ -250,7 +266,8 @@ var ChineseChess={};
 	var Jiang = function(opt){
 		var p = Jiang.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_jiang.png' : p.src = 'b_jiang.png';
-		p.go = function(opt){
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
 			
 		};
 		return p;
@@ -259,7 +276,8 @@ var ChineseChess={};
 	var Pao = function(opt){
 		var p = Pao.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_pao.png' : p.src = 'b_pao.png';
-		p.go = function(opt){
+		p.isLegal = function(objPos){
+			var legal = true, action = GO;
 			
 		};
 		return p;
@@ -268,30 +286,45 @@ var ChineseChess={};
 	var Zu = function(opt){
 		var p = Zu.prototype = new Piece(opt);
 		opt.type == RED ? p.src = 'r_zu.png' : p.src = 'b_zu.png';
-		p.go = function(opt){
-			
-		};
+		Zu.prototype._isLegalPrivate = function(objPos){
+			chess.debug('zu');
+			var legal = true, action = GO;			
+			if(objPos.xCoor != this.xCoor && objPos.yCoor != this.yCoor)
+				legal = false;
+			else if(objPos.xCoor != this.xCoor){
+				Math.abs(objPos.xCoor - this.xCoor) != 1 && (legal = false);
+			}else{
+				//纵向走子
+				Math.abs(objPos.yCoor - this.yCoor) != 1 && (legal = false);
+				if(legal){
+					this.type == RED && (objPos.yCoor < this.yCoor) && (legal = false);
+					this.type == BLACK && (objPos.yCoor > this.yCoor) && (legal = false);
+				}	
+			}
+				
+			return {legal : legal, action : action};	
+		}
 		return p;
 	}	
 	
 	
 	
-	var i, xCenter, yCenter, piece;
+	var i, xCoor, yCoor,piece;
 	var func = [Che, Ma, Xiang, Shi, Jiang, Shi, Xiang, Ma, Che];
 	//车马象士帅
-	for(i = 0; i < vOffset.length; i++){		
-		xCenter = vOffset[i], yCenter = hOffset[0];		
-		piece = new func[i]({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+	for(i = 0; i < vOffset.length; i++){
+		xCoor = i, yCoor = 0;		
+		piece = new func[xCoor]({
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: RED,			
 		});
 		redPieces.push(piece);
 		
-		yCenter = hOffset[hOffset.length - 1];		
-		piece = new func[i]({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+		yCoor = hOffset.length - 1;
+		piece = new func[xCoor]({
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: BLACK,
 		});
 		
@@ -299,18 +332,18 @@ var ChineseChess={};
 	}
 	//炮
 	for(i = 1; i < vOffset.length; i = i + 6){
-		xCenter = vOffset[i], yCenter = hOffset[2];		
+		xCoor = i, yCoor = 2;	
 		piece = new Pao({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: RED,
 		});
 		redPieces.push(piece);
 		
-		yCenter = hOffset[hOffset.length - 3];		
+		yCoor = hOffset.length - 3;
 		piece = new Pao({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: BLACK,
 		});
 		blackPieces.push(piece);
@@ -318,25 +351,29 @@ var ChineseChess={};
 	
 	//卒
 	for(i = 0; i < vOffset.length; i = i + 2){
-		xCenter = vOffset[i], yCenter = hOffset[3];		
+		xCoor = i, yCoor = 3;	
 		piece = new Zu({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: RED,
 		});
 		redPieces.push(piece);
 		
-		yCenter = hOffset[hOffset.length - 4];		
+		yCoor = hOffset.length - 4;
 		piece = new Zu({
-			xCenter	: xCenter,
-			yCenter	: yCenter,
+			xCoor	:xCoor,
+			yCoor	:yCoor,
 			type	: BLACK,
 		});
 		blackPieces.push(piece);
 	}	
 	
 	chess.pieces = redPieces.concat(blackPieces);
+	chess.hOffset = hOffset;
+	chess.vOffset = vOffset;
 	
-	
+	chess.debug = function(log){
+		console.log(log);
+	}
 	
 })(ChineseChess);

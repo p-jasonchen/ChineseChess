@@ -42,19 +42,26 @@
 		    		c.drawImage(this.chessPanelImg, 0, 0); 
 		    	} 
 		    	var that = this;			    	
-			    var pieces = that.pieces;			    	
+			    var pieces = that.pieces;	
+			    var xCenter, yCenter;		    	
 			    if(pieces){
 			    	c.translate(- that.trans.x , -that.trans.y);
 			    	for(var i = 0; i < pieces.length; i++){
-			    		var cur = pieces[i];			    		
-			    		c.drawImage(cur.image, cur.xCenter, cur.yCenter);
+			    		var cur = pieces[i];
+			    		if(cur.alive){
+				    		xCenter = ChineseChess.vOffset[cur.xCoor];	
+				    		yCenter = ChineseChess.hOffset[cur.yCoor];	    		
+				    		c.drawImage(cur.image, xCenter, yCenter);
+			    		}
 			    	}
 			    	
 			    	var selected = that.selected;
 			    	if(selected){
+			    		xCenter = ChineseChess.vOffset[selected.xCoor];	
+			    		yCenter = ChineseChess.hOffset[selected.yCoor];	 
 			    		var border = {
-							xPos		: selected.xCenter,
-							yPos		: selected.yCenter,
+							xPos		: xCenter,
+							yPos		: yCenter,
 							borderWidth : 2 * that.trans.x,
 							borderHeight : 2 * that.trans.y,
 						};
@@ -107,8 +114,6 @@
 					$(window).mousedown(function(e) {
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
-					//console.log('mousedown canvasX=' + canvasX);
-					//console.log('mousedown canvasY=' + canvasY);
 				});
 			};
 
@@ -117,10 +122,14 @@
 					$(window).click(function(e) {
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
-					//console.log('click canvasX=' + canvasX);
-					//console.log('click canvasY=' + canvasY);
 					if(that.selected){						
-						that.selected.go({posX : canvasX, posY : canvasY});
+						var ret = that.selected.go({posX : canvasX, posY : canvasY});
+						if(ret && ret.legal){
+							
+							
+						}else{
+							alert('illegal go');
+						}
 						that.selected = null;
 						that.redraw();
 						return;
@@ -128,7 +137,9 @@
 					var cur;
 					for(var i = 0; i < that.pieces.length; i++){
 						cur = that.pieces[i];
-						if(Math.abs(cur.xCenter - canvasX) < that.trans.x && Math.abs(cur.yCenter - canvasY) < that.trans.y){
+						xCenter = ChineseChess.vOffset[cur.xCoor];	
+			    		yCenter = ChineseChess.hOffset[cur.yCoor];	 
+						if(Math.abs(xCenter - canvasX) < that.trans.x && Math.abs(yCenter - canvasY) < that.trans.y){
 							if(that.selected === cur)
 								that.selected = null;
 							else	
