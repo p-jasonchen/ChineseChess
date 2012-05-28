@@ -15,10 +15,10 @@ var ChineseChess={};
 	
 	var redPieces = [], blackPieces = [];
 	
-	var Piece = function(opt){		
-		for(var key in opt){
-			this[key] = opt[key];
-		}
+	var Piece = function(xCoor,yCoor,type){	
+		this.xCoor = xCoor;
+		this.yCoor = yCoor;
+		this.type = type;
 		this.alive = true;	
 	}
 	
@@ -49,15 +49,26 @@ var ChineseChess={};
 			
 		}
 		
-		Piece.prototype._objInRightBorder = function(objPos){return true;};
-		Piece.prototype._objReachable = function(objPos){return true;};
+		Piece.prototype.objInRightBorder = function(objPos){return true;};
+		Piece.prototype.objReachable = function(objPos){return true;};
+		Piece.prototype.getBothPieces = function(){
+			var self , enemy;
+			if(this.type == RED){
+				self = chess.redPieces;
+				enemy = chess.blackPieces;
+			}else{
+				self = chess.blackPieces;
+				enemy = chess.redPieces;
+			}
+			return {self : self, enemy : enemy};
+		};
 
 		
 		Piece.prototype.go = function(opt){
 			var objPos = this.getCenterXY(opt);
-			var right =  this._objInRightBorder(objPos);
+			var right =  this.objInRightBorder(objPos);
 			if(right){			
-				 var reachable = this._objReachable(objPos);
+				 var reachable = this.objReachable(objPos);
 				 if(reachable){
 				 	this.xCoor = objPos.xCoor;
 				 	this.yCoor = objPos.yCoor;
@@ -69,120 +80,191 @@ var ChineseChess={};
 	
 	
 	
-	var Che = function(opt){
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_che.png' :this.src = 'b_che.png';
+	var Che = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_che.png' :this.src = 'b_che.png';
 	}
 	var p = Che.prototype = new Piece();
+	p.objInRightBorder = function(objPos){
+		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
+	}
+	p.objReachable = function(objPos){
+		var both = this.getBothPieces();
+		var self = both.self;
+		var enemy = both.enemy;
+		var p , all = chess.pieces;
+		var reachable = true;
+		//纵向走子
+		if(objPos.xCoor == this.xCoor){
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != this.xCoor) continue;
+				//判断p是否在this,和objPos之间
+				var diff1 = p.yCoor - this.yCoor;
+				var diff2 = p.yCoor - objPos.yCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//吃子
+						reachable = true;
+						p.alive = false;
+					} 
+				}else{
+					reachable = false;
+				}			
+			}
+		}else{
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.yCoor != this.yCoor) continue;
+				var diff1 = p.xCoor - this.xCoor;
+				var diff2 = p.xCoor - objPos.xCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//吃子
+						reachable = true;
+						p.alive = false;
+					} 
+				}else{
+					reachable = false;
+				}
+				
+			}
+		}
+		return reachable;
+	}
 	
-	var Ma = function(opt){
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_ma.png' : this.src = 'b_ma.png';		
+	var Ma = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_ma.png' : this.src = 'b_ma.png';		
 	}
 	var p = Ma.prototype = new Piece();
-	var Xiang = function(opt){
-		Piece.call(this,opt);		
-		opt.type == RED ? this.src = 'r_xiang.png' : this.src = 'b_xiang.png';
+	p.objInRightBorder = function(objPos){
+		
+	}
+	p.objReachable = function(objPos){
+		
+	}
+	
+	var Xiang = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);		
+		this.type == RED ? this.src = 'r_xiang.png' : this.src = 'b_xiang.png';
 	}
 	var p = Xiang.prototype = new Piece();
-	var Shi = function(opt){
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_shi.png' : this.src = 'b_shi.png';		
+	p.objInRightBorder = function(objPos){
+		
+	}
+	p.objReachable = function(objPos){
+		
+	}
+	
+	var Shi = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_shi.png' : this.src = 'b_shi.png';		
 	}
 	var p = Shi.prototype = new Piece();
-	var Jiang = function(opt){
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_jiang.png' : this.src = 'b_jiang.png';		
+	p.objInRightBorder = function(objPos){
+		return Math.abs(objPos.xCoor - this.xCoor) == 1 && Math.abs(objPos.yCoor - this.yCoor) == 1;
+	}
+	p.objReachable = function(objPos){
+		return true;
+	}
+	
+	var Jiang = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_jiang.png' : this.src = 'b_jiang.png';		
 	}
 	Jiang.prototype = new Piece();
-	var Pao = function(opt){
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_pao.png' : this.src = 'b_pao.png';		
+	p.objInRightBorder = function(objPos){
+		return true;
+	}
+	p.objReachable = function(objPos){
+		return true;
+	}
+	
+	var Pao = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_pao.png' : this.src = 'b_pao.png';		
 	}
 	var p = Pao.prototype = new Piece();
-	var Zu = function(opt){
+	p.objInRightBorder = function(objPos){
 		
-		Zu.prototype._isLegalPrivate = function(objPos){
-			chess.debug('zu');
-			var legal = true, action = GO;			
-			if(objPos.xCoor != this.xCoor && objPos.yCoor != this.yCoor)
-				legal = false;
-			else if(objPos.xCoor != this.xCoor){
-				Math.abs(objPos.xCoor - this.xCoor) != 1 && (legal = false);
-			}else{
-				//纵向走子
-				Math.abs(objPos.yCoor - this.yCoor) != 1 && (legal = false);
-				if(legal){
-					this.type == RED && (objPos.yCoor < this.yCoor) && (legal = false);
-					this.type == BLACK && (objPos.yCoor > this.yCoor) && (legal = false);
-				}	
-			}
-				
-			return {legal : legal, action : action};	
-		}
+	}
+	p.objReachable = function(objPos){
 		
-		Piece.call(this,opt);
-		opt.type == RED ? this.src = 'r_zu.png' : this.src = 'b_zu.png';		
+	}
+	
+	var Zu = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_zu.png' : this.src = 'b_zu.png';		
 	}	
 	var p = Zu.prototype = new Piece();
-	
+	p.objInRightBorder = function(objPos){
+		if(objPos.xCoor == this.xCoor){
+			var legal = true;
+			this.type == RED && (objPos.yCoor < this.yCoor) && (legal = false);
+			this.type == BLACK && (objPos.yCoor > this.yCoor) && (legal = false);
+			return legal;
+		}else{
+			return objPos.yCoor == this.yCoor;
+		}
+	}
+	p.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
+	}
 	
 	var i, xCoor, yCoor,piece;
 	var func = [Che, Ma, Xiang, Shi, Jiang, Shi, Xiang, Ma, Che];
 	//车马象士帅
 	for(i = 0; i < vOffset.length; i++){
 		xCoor = i, yCoor = 0;		
-		piece = new func[xCoor]({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,			
-		});
+		piece = new func[xCoor](xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 1;
-		piece = new func[xCoor]({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
-		
+		piece = new func[xCoor](xCoor,yCoor,BLACK);		
 		blackPieces.push(piece);
 	}
 	//炮
 	for(i = 1; i < vOffset.length; i = i + 6){
 		xCoor = i, yCoor = 2;	
-		piece = new Pao({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,
-		});
+		piece = new Pao(xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 3;
-		piece = new Pao({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
+		piece = new Pao(xCoor,yCoor,BLACK);
 		blackPieces.push(piece);
 	}
 	
 	//卒
 	for(i = 0; i < vOffset.length; i = i + 2){
 		xCoor = i, yCoor = 3;	
-		piece = new Zu({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,
-		});
+		piece = new Zu(xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 4;
-		piece = new Zu({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
+		piece = new Zu(xCoor,yCoor,BLACK);
 		blackPieces.push(piece);
 	}	
 	
