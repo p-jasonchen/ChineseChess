@@ -215,7 +215,7 @@ var ChineseChess={};
 			if(this.type == RED){				
 				return (objPos.yCoor >=0 && objPos.yCoor <= 2);
 			}else{				
-				return (objPos.yCoor >=vOffset.length -3 && objPos.yCoor <= vOffset.length -1);
+				return (objPos.yCoor >=vOffset.length -2 && objPos.yCoor <= vOffset.length);
 			}
 		}
 		return false;
@@ -242,7 +242,19 @@ var ChineseChess={};
 	}
 	Jiang.prototype = new Piece();
 	Jiang.prototype.objInRightBorder = function(objPos){
-		return true;
+		var diffX = objPos.xCoor - this.xCoor;
+		var diffY = objPos.yCoor - this.yCoor;
+		if(Math.abs(diffX + diffY) == 1 && diffX * diffY == 0 ){
+			if((objPos.xCoor >=3 && objPos.xCoor <= 5)){
+				if(this.type == RED){				
+					return (objPos.yCoor >=0 && objPos.yCoor <= 2);
+				}else{				
+					return (objPos.yCoor >=vOffset.length -2 && objPos.yCoor <= vOffset.length);
+				}
+			}
+			return false;
+		}	
+		return false;	
 	}
 	Jiang.prototype.objReachable = function(objPos){
 		var p , all = chess.pieces;
