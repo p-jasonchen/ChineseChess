@@ -161,20 +161,44 @@ var ChineseChess={};
 	}
 	Xiang.prototype = new Piece();
 	Xiang.prototype.objInRightBorder = function(objPos){
-		
+		var right = Math.abs(objPos.xCoor - this.xCoor) == 2 && Math.abs(objPos.yCoor - this.yCoor) == 2;
+		if(right && (objPos.xCoor % 2 == 0)){
+			if(this.type == RED){				
+				return (objPos.yCoor % 2 == 0 && objPos.yCoor <= 4);
+			}else{				
+				return (objPos.yCoor % 2 == 1 && objPos.yCoor >= 5);
+			}
+		}
+		return false;
 	}
 	Xiang.prototype.objReachable = function(objPos){
 		var p , all = chess.pieces;
 		var reachable = true;		
 		for(var i = 0; i < all.length; i++){
 			p = all[i];
-			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
-			if(p.type == this.type) reachable = false;
-			else{
-				//吃子
-				reachable = true;
-				p.alive = false;
-			} 
+			var diffY1 = p.yCoor - this.yCoor;
+			var diffY2 = p.yCoor - objPos.yCoor;
+			var markY = diffY1 + diffY2;
+			
+			var diffX1 = p.xCoor - this.xCoor;
+			var diffX2 = p.xCoor - objPos.xCoor;
+			var markX = diffX1 + diffX2;
+			chess.debug('aa');
+			if(markX == 0 && markY == 0){
+				reachable = false;
+			}			
+		}
+		if(reachable){
+			for(var i = 0; i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;
+				if(p.type == this.type) reachable = false;
+				else{
+					//吃子
+					reachable = true;
+					p.alive = false;
+				} 
+			}
 		}		
 		return reachable;
 	}
