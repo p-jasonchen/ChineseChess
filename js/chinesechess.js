@@ -84,11 +84,11 @@ var ChineseChess={};
 		Piece.call(this,xCoor,yCoor,type);
 		this.type == RED ? this.src = 'r_che.png' :this.src = 'b_che.png';
 	}
-	var p = Che.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Che.prototype = new Piece();
+	Che.prototype.objInRightBorder = function(objPos){
 		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
 	}
-	p.objReachable = function(objPos){
+	Che.prototype.objReachable = function(objPos){
 		var both = this.getBothPieces();
 		var self = both.self;
 		var enemy = both.enemy;
@@ -147,11 +147,11 @@ var ChineseChess={};
 		Piece.call(this,xCoor,yCoor,type);
 		this.type == RED ? this.src = 'r_ma.png' : this.src = 'b_ma.png';		
 	}
-	var p = Ma.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Ma.prototype = new Piece();
+	Ma.prototype.objInRightBorder = function(objPos){
 		
 	}
-	p.objReachable = function(objPos){
+	Ma.prototype.objReachable = function(objPos){
 		
 	}
 	
@@ -159,24 +159,56 @@ var ChineseChess={};
 		Piece.call(this,xCoor,yCoor,type);		
 		this.type == RED ? this.src = 'r_xiang.png' : this.src = 'b_xiang.png';
 	}
-	var p = Xiang.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Xiang.prototype = new Piece();
+	Xiang.prototype.objInRightBorder = function(objPos){
 		
 	}
-	p.objReachable = function(objPos){
-		
+	Xiang.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
 	}
 	
 	var Shi = function(xCoor,yCoor,type){
 		Piece.call(this,xCoor,yCoor,type);
 		this.type == RED ? this.src = 'r_shi.png' : this.src = 'b_shi.png';		
 	}
-	var p = Shi.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
-		return Math.abs(objPos.xCoor - this.xCoor) == 1 && Math.abs(objPos.yCoor - this.yCoor) == 1;
+	Shi.prototype = new Piece();
+	Shi.prototype.objInRightBorder = function(objPos){
+		var right = Math.abs(objPos.xCoor - this.xCoor) == 1 && Math.abs(objPos.yCoor - this.yCoor) == 1;
+		if(right && (objPos.xCoor >=3 && objPos.xCoor <= 5)){
+			if(this.type == RED){				
+				return (objPos.yCoor >=0 && objPos.yCoor <= 2);
+			}else{				
+				return (objPos.yCoor >=vOffset.length -3 && objPos.yCoor <= vOffset.length -1);
+			}
+		}
+		return false;
 	}
-	p.objReachable = function(objPos){
-		return true;
+	Shi.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
 	}
 	
 	var Jiang = function(xCoor,yCoor,type){
@@ -184,22 +216,34 @@ var ChineseChess={};
 		this.type == RED ? this.src = 'r_jiang.png' : this.src = 'b_jiang.png';		
 	}
 	Jiang.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Jiang.prototype.objInRightBorder = function(objPos){
 		return true;
 	}
-	p.objReachable = function(objPos){
-		return true;
+	Jiang.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
 	}
 	
 	var Pao = function(xCoor,yCoor,type){
 		Piece.call(this,xCoor,yCoor,type);
 		this.type == RED ? this.src = 'r_pao.png' : this.src = 'b_pao.png';		
 	}
-	var p = Pao.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Pao.prototype = new Piece();
+	Pao.prototype.objInRightBorder = function(objPos){
 		
 	}
-	p.objReachable = function(objPos){
+	Pao.prototype.objReachable = function(objPos){
 		
 	}
 	
@@ -207,18 +251,18 @@ var ChineseChess={};
 		Piece.call(this,xCoor,yCoor,type);
 		this.type == RED ? this.src = 'r_zu.png' : this.src = 'b_zu.png';		
 	}	
-	var p = Zu.prototype = new Piece();
-	p.objInRightBorder = function(objPos){
+	Zu.prototype = new Piece();
+	Zu.prototype.objInRightBorder = function(objPos){
 		if(objPos.xCoor == this.xCoor){
-			var legal = true;
-			this.type == RED && (objPos.yCoor < this.yCoor) && (legal = false);
-			this.type == BLACK && (objPos.yCoor > this.yCoor) && (legal = false);
-			return legal;
+			var right = true;
+			this.type == RED && (objPos.yCoor < this.yCoor) && (right = false);
+			this.type == BLACK && (objPos.yCoor > this.yCoor) && (right = false);
+			return right;
 		}else{
 			return objPos.yCoor == this.yCoor;
 		}
 	}
-	p.objReachable = function(objPos){
+	Zu.prototype.objReachable = function(objPos){
 		var p , all = chess.pieces;
 		var reachable = true;		
 		for(var i = 0; i < all.length; i++){
