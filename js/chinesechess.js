@@ -148,10 +148,23 @@ var ChineseChess={};
 	}
 	Ma.prototype = new Piece();
 	Ma.prototype.objInRightBorder = function(objPos){
-		
+		var diffX = Math.abs(objPos.xCoor - this.xCoor);
+		var diffY = Math.abs(objPos.yCoor - this.yCoor);
+		var bigger, smaller;
+		if(diffX > diffY){
+			bigger = diffX; smaller = diffY;
+		}else{
+			bigger = diffY; smaller = diffX;
+		}
+		var right = (bigger == 2 && bigger/smaller == 2);
+		if(right){
+			if(bigger == diffX){
+				
+			}
+		}
 	}
 	Ma.prototype.objReachable = function(objPos){
-		
+		return true;
 	}
 	
 	var Xiang = function(xCoor,yCoor,type){
