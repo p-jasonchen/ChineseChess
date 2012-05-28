@@ -128,7 +128,9 @@
 							that.selected = null;	
 						else{
 							var ret = that.selected.go({posX : canvasX, posY : canvasY});
-							if(ret && ret.legal){								
+
+							if(ret){		
+
 							}else{
 								alert('illegal go');
 							}
@@ -137,7 +139,9 @@
 						that.redraw();
 						return;
 					}
-					var cur;
+
+					var cur, xCenter, yCenter;
+
 					for(var i = 0; i < that.pieces.length; i++){
 						cur = that.pieces[i];
 						if(!cur.alive) continue;

@@ -9,19 +9,21 @@ var ChineseChess={};
 	var hOffset = [80,116,152,186,222,257,292,327,362,398];
 	//棋盘纵线偏移
 	var vOffset = [20,55,90,125,160,195,230,265,300];
+
 	
 	var RED = 0, BLACK = 1;
 	var GO = 0, BEAT = 1;
 	
 	var redPieces = [], blackPieces = [];
 	
-	var Piece = function(opt){		
-		for(var key in opt){
-			this[key] = opt[key];
-		}
-		this.alive = true;
-		
-		Piece.prototype.getCenterXY = function(opt){
+	var Piece = function(xCoor,yCoor,type){	
+		this.xCoor = xCoor;
+		this.yCoor = yCoor;
+		this.type = type;
+		this.alive = true;	
+	}
+	
+	Piece.prototype.getCenterXY = function(opt){
 			var posX = opt.posX, posY = opt.posY;
 			var xCoor = vOffset[0], yCoor = hOffset[0];
 			var i,j;
@@ -48,323 +50,362 @@ var ChineseChess={};
 			
 		}
 		
-		/**
-		 * 
-		 * @param {Object} goDirKey 判断走子方向的key,如果为xCoor则为纵向，对应的opGoDirKey值为yCoor。
-		 * @param {Object} opGoDirKey
-		 */
-		Piece.prototype.getAdjacent = function(goDirKey, opGoDirKey){
-			var cur, opponent, myself;
+		Piece.prototype.objInRightBorder = function(objPos){return true;};
+		Piece.prototype.objReachable = function(objPos){return true;};
+		Piece.prototype.getBothPieces = function(){
+			var self , enemy;
 			if(this.type == RED){
-				opponent = blackPieces;
-				myself = redPieces;
+				self = chess.redPieces;
+				enemy = chess.blackPieces;
 			}else{
-				opponent = redPieces;
-				myself = blackPieces;
+				self = chess.blackPieces;
+				enemy = chess.redPieces;
 			}
-			//lower表示相对左上位置，greater表示相对右下位置	
-			var opLower,opGreater,myLower,myGreater;				
-			for(var i = 0; i < opponent.length; i ++){
-				cur = opponent[i];
-				if(cur.alive && cur !== this && cur[goDirKey] == this[goDirKey]){
-					if(cur[opGoDirKey] > this[opGoDirKey]){
-						if(!opGreater || cur[opGoDirKey] < opGreater[opGoDirKey] )
-							opGreater = cur;
-					}else{
-						if(!opLower || cur[opGoDirKey] > opLower[opGoDirKey])
-							opLower = cur;
-					}
-				}
-			}
-			
-			for(var i = 0; i < myself.length; i ++){
-				cur = myself[i];
-				if(cur.alive && cur !== this && cur[goDirKey] == this[goDirKey]){
-					if(cur[opGoDirKey] > this[opGoDirKey]){						
-						 if(!myGreater || cur[opGoDirKey] < myGreater[opGoDirKey])
-							myGreater = cur;
-					}else{
-						if(!myLower || cur[opGoDirKey] > myLower[opGoDirKey])
-							myLower = cur;
-					}
-				}
-			}
-			return {opLower: opLower, opGreater: opGreater, myLower: myLower, myGreater: myGreater};
-		}
-		
-		Piece.prototype.isLegalByDirectionPublic = function(objPos, opGoDirKey, adj){
-			var opLower = adj.opLower ,opGreater = adj.opGreater ,myLower = adj.myLower, myGreater = adj.myGreater;	
-			var legal = true, action = GO;
-			//向下走子
-			if(objPos[opGoDirKey] > this[opGoDirKey] ){
-				if(opGreater && myGreater){
-					//自己的子在上方
-					if(opGreater[opGoDirKey]  > myGreater[opGoDirKey] ){
-						if(objPos[opGoDirKey]  < myGreater[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else{
-							legal = false;
-						}
-					}else if(opGreater[opGoDirKey]  < myGreater[opGoDirKey] ){	//自己的子在下方
-						if(objPos[opGoDirKey]  < opGreater[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
-							legal = true;
-							action = BEAT;
-							opGreater.alive = false;
-						}else{
-							legal = false;
-						}
-					}
-				}else if(opGreater){
-					if(objPos[opGoDirKey]  < opGreater[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else  if(objPos[opGoDirKey]  == opGreater[opGoDirKey] ){
-							legal = true;
-							action = BEAT;
-							opGreater.alive = false;
-						}else{
-							legal = false;
-						}
-				}else if(myGreater){
-					if(objPos[opGoDirKey]  < myGreater[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else{
-							legal = false;
-						}
-				}
-			}else if(objPos[opGoDirKey]  < this[opGoDirKey] ){	//向上走子
-				if(opLower && myLower){
-					//自己的子在下方
-					if(opLower[opGoDirKey]  < myLower[opGoDirKey] ){
-						if(objPos[opGoDirKey]  > myLower[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else{
-							legal = false;
-						}
-					}else if(opLower[opGoDirKey]  > myLower[opGoDirKey] ){	//自己的子在上方
-						if(objPos[opGoDirKey]  > opLower[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
-							legal = true;
-							action = BEAT;
-							opLower.alive = false;
-						}else{
-							legal = false;
-						}
-					}
-				}else if(opLower){
-					if(objPos[opGoDirKey]  > opLower[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else  if(objPos[opGoDirKey]  == opLower[opGoDirKey] ){
-							legal = true;
-							action = BEAT;
-							opLower.alive = false;
-						}else{
-							legal = false;
-						}
-				}else if(myLower){
-					if(objPos[opGoDirKey]  > myLower[opGoDirKey] ){
-							legal = true;
-							action = GO;
-						}else{
-							legal = false;
-						} 	
-				}
-			}
-			return {legal : legal, action : action};
-		}
-		
-		Piece.prototype._isLegalPrivate = function(objPos){};
-		Piece.prototype._isLegalPublic = function(objPos){
-			var adj, ret;
-				//纵向走子
-				if(objPos.xCoor == this.xCoor){	
-					adj =this.getAdjacent('xCoor','yCoor');
-					ret = this.isLegalByDirectionPublic(objPos,'yCoor', adj);					
-				}else if(objPos.yCoor == this.yCoor){
-					adj = this.getAdjacent('yCoor','xCoor');
-					ret = this.isLegalByDirectionPublic(objPos,'xCoor', adj);
-				}
-				if(ret){
-					legal = ret.legal;
-					action = ret.action;
-				}
-				
-				if(legal){
-					for(var key in objPos){
-						this[key] = objPos[key];
-					}
-				}
-				return ret;
+			return {self : self, enemy : enemy};
 		};
 
 		
 		Piece.prototype.go = function(opt){
 			var objPos = this.getCenterXY(opt);
-			var private =  this._isLegalPrivate(objPos);
-			if(private.legal)			
-				return this._isLegalPublic(objPos);
-			else
-				return private;
+			var right =  this.objInRightBorder(objPos);
+			if(right){			
+				 var reachable = this.objReachable(objPos);
+				 if(reachable){
+				 	this.xCoor = objPos.xCoor;
+				 	this.yCoor = objPos.yCoor;
+				 }
+				 return reachable;
+			}else
+				return false;
 		};
+	
+	
+	
+	var Che = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_che.png' :this.src = 'b_che.png';
 	}
-	
-	
-	
-	var Che = function(opt){
-		var p = Che.prototype = new Piece(opt);		
-		opt.type == RED ? p.src = 'r_che.png' : p.src = 'b_che.png';
-		p._isLegalPrivate = function(objPos){
-			chess.debug('che');
-			var legal = true, action = GO;
-			if(objPos.xCoor != this.xCoor && objPos.yCoor != this.yCoor)
-				legal = false;
-			return {legal : legal, action : action};
-			
-		};
-		return p;
+	Che.prototype = new Piece();
+	Che.prototype.objInRightBorder = function(objPos){
+		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
 	}
-	
-	var Ma = function(opt){
-		var p = Ma.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_ma.png' : p.src = 'b_ma.png';
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			
-		};
-		return p;
-	}
-	
-	var Xiang = function(opt){
-		var p = Xiang.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_xiang.png' : p.src = 'b_xiang.png';
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			
-		};
-		return p;
-	}
-	
-	var Shi = function(opt){
-		var p = Shi.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_shi.png' : p.src = 'b_shi.png';
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			
-		};
-		return p;
-	}
-	
-	var Jiang = function(opt){
-		var p = Jiang.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_jiang.png' : p.src = 'b_jiang.png';
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			
-		};
-		return p;
-	}
-	
-	var Pao = function(opt){
-		var p = Pao.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_pao.png' : p.src = 'b_pao.png';
-		p.isLegal = function(objPos){
-			var legal = true, action = GO;
-			
-		};
-		return p;
-	}
-	
-	var Zu = function(opt){
-		var p = Zu.prototype = new Piece(opt);
-		opt.type == RED ? p.src = 'r_zu.png' : p.src = 'b_zu.png';
-		Zu.prototype._isLegalPrivate = function(objPos){
-			chess.debug('zu');
-			var legal = true, action = GO;			
-			if(objPos.xCoor != this.xCoor && objPos.yCoor != this.yCoor)
-				legal = false;
-			else if(objPos.xCoor != this.xCoor){
-				Math.abs(objPos.xCoor - this.xCoor) != 1 && (legal = false);
-			}else{
-				//纵向走子
-				Math.abs(objPos.yCoor - this.yCoor) != 1 && (legal = false);
-				if(legal){
-					this.type == RED && (objPos.yCoor < this.yCoor) && (legal = false);
-					this.type == BLACK && (objPos.yCoor > this.yCoor) && (legal = false);
-				}	
+	Che.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces, toeat;
+		var reachable = true;
+		//纵向走子
+		if(objPos.xCoor == this.xCoor){
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != this.xCoor) continue;
+				//判断p是否在this,和objPos之间
+				var diff1 = p.yCoor - this.yCoor;
+				var diff2 = p.yCoor - objPos.yCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				//不在中间
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					reachable = false;
+				}			
 			}
+		}else{
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.yCoor != this.yCoor) continue;
+				var diff1 = p.xCoor - this.xCoor;
+				var diff2 = p.xCoor - objPos.xCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					reachable = false;
+				}
 				
-			return {legal : legal, action : action};	
+			}
 		}
-		return p;
+		if(reachable && toeat) toeat.alive = false;
+		return reachable;
+	}
+	
+	var Ma = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_ma.png' : this.src = 'b_ma.png';		
+	}
+	Ma.prototype = new Piece();
+	Ma.prototype.objInRightBorder = function(objPos){
+		
+	}
+	Ma.prototype.objReachable = function(objPos){
+		
+	}
+	
+	var Xiang = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);		
+		this.type == RED ? this.src = 'r_xiang.png' : this.src = 'b_xiang.png';
+	}
+	Xiang.prototype = new Piece();
+	Xiang.prototype.objInRightBorder = function(objPos){
+		var right = Math.abs(objPos.xCoor - this.xCoor) == 2 && Math.abs(objPos.yCoor - this.yCoor) == 2;
+		if(right && (objPos.xCoor % 2 == 0)){
+			if(this.type == RED){				
+				return (objPos.yCoor % 2 == 0 && objPos.yCoor <= 4);
+			}else{				
+				return (objPos.yCoor % 2 == 1 && objPos.yCoor >= 5);
+			}
+		}
+		return false;
+	}
+	Xiang.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;	
+		//先判断中心位置是否有障碍	
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			var diffY1 = p.yCoor - this.yCoor;
+			var diffY2 = p.yCoor - objPos.yCoor;
+			var markY = diffY1 + diffY2;
+			
+			var diffX1 = p.xCoor - this.xCoor;
+			var diffX2 = p.xCoor - objPos.xCoor;
+			var markX = diffX1 + diffX2;
+			chess.debug('aa');
+			if(markX == 0 && markY == 0){
+				reachable = false;
+			}			
+		}
+		if(reachable){
+			for(var i = 0; i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;
+				if(p.type == this.type) reachable = false;
+				else{
+					//吃子
+					reachable = true;
+					p.alive = false;
+				} 
+			}
+		}		
+		return reachable;
+	}
+	
+	var Shi = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_shi.png' : this.src = 'b_shi.png';		
+	}
+	Shi.prototype = new Piece();
+	Shi.prototype.objInRightBorder = function(objPos){
+		var right = Math.abs(objPos.xCoor - this.xCoor) == 1 && Math.abs(objPos.yCoor - this.yCoor) == 1;
+		if(right && (objPos.xCoor >=3 && objPos.xCoor <= 5)){
+			if(this.type == RED){				
+				return (objPos.yCoor >=0 && objPos.yCoor <= 2);
+			}else{				
+				return (objPos.yCoor >= hOffset.length -3 && objPos.yCoor <= hOffset.length - 1);
+			}
+		}
+		return false;
+	}
+	Shi.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
+	}
+	
+	var Jiang = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_jiang.png' : this.src = 'b_jiang.png';		
+	}
+	Jiang.prototype = new Piece();
+	Jiang.prototype.objInRightBorder = function(objPos){
+		var diffX = objPos.xCoor - this.xCoor;
+		var diffY = objPos.yCoor - this.yCoor;
+		if(Math.abs(diffX + diffY) == 1 && diffX * diffY == 0 ){
+			if((objPos.xCoor >=3 && objPos.xCoor <= 5)){
+				if(this.type == RED){				
+					return (objPos.yCoor >=0 && objPos.yCoor <= 2);
+				}else{				
+					return (objPos.yCoor >= hOffset.length -3 && objPos.yCoor <= hOffset.length - 1);
+				}
+			}
+			return false;
+		}	
+		return false;	
+	}
+	Jiang.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
+	}
+	
+	var Pao = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_pao.png' : this.src = 'b_pao.png';		
+	}
+	Pao.prototype = new Piece();
+	
+	Pao.prototype.objInRightBorder = function(objPos){
+		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
 	}	
 	
+	Pao.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces, toeat, interval = 0;
+		var reachable = true;		
+		//纵向走子
+		if(objPos.xCoor == this.xCoor){
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != this.xCoor) continue;
+				//判断p是否在this,和objPos之间
+				var diff1 = p.yCoor - this.yCoor;
+				var diff2 = p.yCoor - objPos.yCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				//不在中间
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					if(interval++ > 1)
+						reachable = false;
+				}			
+			}
+		}else{
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.yCoor != this.yCoor) continue;
+				var diff1 = p.xCoor - this.xCoor;
+				var diff2 = p.xCoor - objPos.xCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					if(interval++ > 1)
+						reachable = false;
+				}
+				
+			}
+		}
+		if(reachable && toeat && interval == 1) {toeat.alive = false;}
+		if(interval == 1 && !toeat) reachable = false;
+		return reachable;
+	}
 	
+	var Zu = function(xCoor,yCoor,type){
+		Piece.call(this,xCoor,yCoor,type);
+		this.type == RED ? this.src = 'r_zu.png' : this.src = 'b_zu.png';		
+	}	
+	Zu.prototype = new Piece();
+	Zu.prototype.objInRightBorder = function(objPos){
+		if(objPos.xCoor == this.xCoor){
+			var right = true;
+			this.type == RED && (objPos.yCoor - this.yCoor != 1) && (right = false);
+			this.type == BLACK && (objPos.yCoor - this.yCoor != -1) && (right = false);
+			return right;
+		}else if(objPos.yCoor == this.yCoor){
+			return Math.abs(objPos.xCoor - this.xCoor) == 1;
+		}
+		return false;
+	}
+	Zu.prototype.objReachable = function(objPos){
+		var p , all = chess.pieces;
+		var reachable = true;		
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;				
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}		
+		return reachable;
+	}
 	
 	var i, xCoor, yCoor,piece;
 	var func = [Che, Ma, Xiang, Shi, Jiang, Shi, Xiang, Ma, Che];
 	//车马象士帅
 	for(i = 0; i < vOffset.length; i++){
 		xCoor = i, yCoor = 0;		
-		piece = new func[xCoor]({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,			
-		});
+
+		piece = new func[xCoor](xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 1;
-		piece = new func[xCoor]({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
-		
+		piece = new func[xCoor](xCoor,yCoor,BLACK);
 		blackPieces.push(piece);
 	}
 	//炮
 	for(i = 1; i < vOffset.length; i = i + 6){
 		xCoor = i, yCoor = 2;	
-		piece = new Pao({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,
-		});
+
+		piece = new Pao(xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 3;
-		piece = new Pao({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
+		piece = new Pao(xCoor,yCoor,BLACK);
 		blackPieces.push(piece);
 	}
 	
 	//卒
 	for(i = 0; i < vOffset.length; i = i + 2){
 		xCoor = i, yCoor = 3;	
-		piece = new Zu({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: RED,
-		});
+
+		piece = new Zu(xCoor,yCoor,RED);
 		redPieces.push(piece);
 		
 		yCoor = hOffset.length - 4;
-		piece = new Zu({
-			xCoor	:xCoor,
-			yCoor	:yCoor,
-			type	: BLACK,
-		});
+		piece = new Zu(xCoor,yCoor,BLACK);
+
 		blackPieces.push(piece);
 	}	
 	
