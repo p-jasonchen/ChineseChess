@@ -173,7 +173,8 @@ var ChineseChess={};
 	}
 	Xiang.prototype.objReachable = function(objPos){
 		var p , all = chess.pieces;
-		var reachable = true;		
+		var reachable = true;	
+		//先判断中心位置是否有障碍	
 		for(var i = 0; i < all.length; i++){
 			p = all[i];
 			var diffY1 = p.yCoor - this.yCoor;
@@ -279,12 +280,13 @@ var ChineseChess={};
 	Zu.prototype.objInRightBorder = function(objPos){
 		if(objPos.xCoor == this.xCoor){
 			var right = true;
-			this.type == RED && (objPos.yCoor < this.yCoor) && (right = false);
-			this.type == BLACK && (objPos.yCoor > this.yCoor) && (right = false);
+			this.type == RED && (objPos.yCoor - this.yCoor != 1) && (right = false);
+			this.type == BLACK && (objPos.yCoor - this.yCoor != -1) && (right = false);
 			return right;
-		}else{
-			return objPos.yCoor == this.yCoor;
+		}else if(objPos.yCoor == this.yCoor){
+			return Math.abs(objPos.xCoor - this.xCoor) == 1;
 		}
+		return false;
 	}
 	Zu.prototype.objReachable = function(objPos){
 		var p , all = chess.pieces;
