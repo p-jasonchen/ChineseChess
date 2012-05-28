@@ -101,7 +101,6 @@ var ChineseChess={};
 				var diff1 = p.yCoor - this.yCoor;
 				var diff2 = p.yCoor - objPos.yCoor;
 				var mark = diff1 * diff2; 
-				chess.debug('');
 				//不在中间
 				if(mark > 0){
 					reachable = true;
@@ -123,7 +122,6 @@ var ChineseChess={};
 				var diff1 = p.xCoor - this.xCoor;
 				var diff2 = p.xCoor - objPos.xCoor;
 				var mark = diff1 * diff2; 
-				chess.debug('');
 				if(mark > 0){
 					reachable = true;
 				}else if(mark == 0){
@@ -159,13 +157,44 @@ var ChineseChess={};
 		}
 		var right = (bigger == 2 && bigger/smaller == 2);
 		if(right){
+			var tripX, triY;
 			if(bigger == diffX){
-				
+				tripY = this.yCoor;
+				if(objPos.xCoor > this.xCoor)
+					tripX = this.xCoor + 1;
+				else
+					tripX = this.xCoor -1;
+			}else{
+				tripX = this.xCoor;
+				if(objPos.yCoor > this.yCoor)
+					tripY = this.yCoor + 1;
+				else
+					tripY = this.yCoor -1;
 			}
-		}
+			
+			var p , all = chess.pieces;
+			for(var i = 0; i < all.length; i++){
+				p = all[i];
+				if(p.xCoor == tripX && p.yCoor == tripY)
+					return false;
+			}
+		}else
+			return false;
+		return true;
 	}
 	Ma.prototype.objReachable = function(objPos){
-		return true;
+		var p , all = chess.pieces, reachable = true;
+		for(var i = 0; i < all.length; i++){
+			p = all[i];
+			if(!p.alive || p === this || p.xCoor != objPos.xCoor || p.yCoor != objPos.yCoor) continue;
+			if(p.type == this.type) reachable = false;
+			else{
+				//吃子
+				reachable = true;
+				p.alive = false;
+			} 
+		}
+		return reachable;	
 	}
 	
 	var Xiang = function(xCoor,yCoor,type){
@@ -197,7 +226,6 @@ var ChineseChess={};
 			var diffX1 = p.xCoor - this.xCoor;
 			var diffX2 = p.xCoor - objPos.xCoor;
 			var markX = diffX1 + diffX2;
-			chess.debug('aa');
 			if(markX == 0 && markY == 0){
 				reachable = false;
 			}			
@@ -307,7 +335,6 @@ var ChineseChess={};
 				var diff1 = p.yCoor - this.yCoor;
 				var diff2 = p.yCoor - objPos.yCoor;
 				var mark = diff1 * diff2; 
-				chess.debug('');
 				//不在中间
 				if(mark > 0){
 					reachable = true;
@@ -330,7 +357,6 @@ var ChineseChess={};
 				var diff1 = p.xCoor - this.xCoor;
 				var diff2 = p.xCoor - objPos.xCoor;
 				var mark = diff1 * diff2; 
-				chess.debug('');
 				if(mark > 0){
 					reachable = true;
 				}else if(mark == 0){
