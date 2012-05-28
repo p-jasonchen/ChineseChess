@@ -89,10 +89,7 @@ var ChineseChess={};
 		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
 	}
 	Che.prototype.objReachable = function(objPos){
-		var both = this.getBothPieces();
-		var self = both.self;
-		var enemy = both.enemy;
-		var p , all = chess.pieces;
+		var p , all = chess.pieces, toeat;
 		var reachable = true;
 		//纵向走子
 		if(objPos.xCoor == this.xCoor){
@@ -104,14 +101,15 @@ var ChineseChess={};
 				var diff2 = p.yCoor - objPos.yCoor;
 				var mark = diff1 * diff2; 
 				chess.debug('');
+				//不在中间
 				if(mark > 0){
 					reachable = true;
 				}else if(mark == 0){
 					if(p.type == this.type) reachable = false;
 					else{
-						//吃子
+						//待吃子
 						reachable = true;
-						p.alive = false;
+						toeat = p;
 					} 
 				}else{
 					reachable = false;
@@ -130,9 +128,9 @@ var ChineseChess={};
 				}else if(mark == 0){
 					if(p.type == this.type) reachable = false;
 					else{
-						//吃子
+						//待吃子
 						reachable = true;
-						p.alive = false;
+						toeat = p;
 					} 
 				}else{
 					reachable = false;
@@ -140,6 +138,7 @@ var ChineseChess={};
 				
 			}
 		}
+		if(reachable && toeat) toeat.alive = false;
 		return reachable;
 	}
 	
@@ -215,7 +214,7 @@ var ChineseChess={};
 			if(this.type == RED){				
 				return (objPos.yCoor >=0 && objPos.yCoor <= 2);
 			}else{				
-				return (objPos.yCoor >=vOffset.length -2 && objPos.yCoor <= vOffset.length);
+				return (objPos.yCoor >= hOffset.length -3 && objPos.yCoor <= hOffset.length - 1);
 			}
 		}
 		return false;
@@ -249,7 +248,7 @@ var ChineseChess={};
 				if(this.type == RED){				
 					return (objPos.yCoor >=0 && objPos.yCoor <= 2);
 				}else{				
-					return (objPos.yCoor >=vOffset.length -2 && objPos.yCoor <= vOffset.length);
+					return (objPos.yCoor >= hOffset.length -3 && objPos.yCoor <= hOffset.length - 1);
 				}
 			}
 			return false;
@@ -277,11 +276,66 @@ var ChineseChess={};
 		this.type == RED ? this.src = 'r_pao.png' : this.src = 'b_pao.png';		
 	}
 	Pao.prototype = new Piece();
+	
 	Pao.prototype.objInRightBorder = function(objPos){
-		
-	}
+		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
+	}	
+	
 	Pao.prototype.objReachable = function(objPos){
-		
+		var p , all = chess.pieces, toeat, interval = 0;
+		var reachable = true;		
+		//纵向走子
+		if(objPos.xCoor == this.xCoor){
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.xCoor != this.xCoor) continue;
+				//判断p是否在this,和objPos之间
+				var diff1 = p.yCoor - this.yCoor;
+				var diff2 = p.yCoor - objPos.yCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				//不在中间
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					if(interval++ > 1)
+						reachable = false;
+				}			
+			}
+		}else{
+			for(var i = 0; reachable && i < all.length; i++){
+				p = all[i];
+				if(!p.alive || p === this || p.yCoor != this.yCoor) continue;
+				var diff1 = p.xCoor - this.xCoor;
+				var diff2 = p.xCoor - objPos.xCoor;
+				var mark = diff1 * diff2; 
+				chess.debug('');
+				if(mark > 0){
+					reachable = true;
+				}else if(mark == 0){
+					if(p.type == this.type) reachable = false;
+					else{
+						//待吃子
+						reachable = true;
+						toeat = p;
+					} 
+				}else{
+					if(interval++ > 1)
+						reachable = false;
+				}
+				
+			}
+		}
+		if(reachable && toeat && interval == 1) {toeat.alive = false;}
+		if(interval == 1 && !toeat) reachable = false;
+		return reachable;
 	}
 	
 	var Zu = function(xCoor,yCoor,type){
