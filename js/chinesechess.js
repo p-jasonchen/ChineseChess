@@ -15,12 +15,34 @@ var ChineseChess={};
 	var GO = 0, BEAT = 1;
 	
 	var redPieces = [], blackPieces = [];
+	var redJiang,blackJiang;
 	
 	var Piece = function(xCoor,yCoor,type){	
 		this.xCoor = xCoor;
 		this.yCoor = yCoor;
 		this.type = type;
 		this.alive = true;	
+		
+		this.toeat = null;
+		this.savedX = this.xCoor;
+		this.saveY = this.yCoor;
+	}
+	
+	Piece.prototype.hasPieceBetweenJiang = function(){
+		if(redJiang.xCoor != blackJiang.xCoor) return true;
+		var cur, all = chess.pieces, interval = 0;
+		for(var i = 0; i < all.length; i++){
+			cur = all[i];
+			if(!cur.alive || cur.xCoor != redJiang.xCoor) continue;
+			var diff1 = cur.yCoor - redJiang.yCoor;
+			var diff2 = cur.yCoor - blackJiang.yCoor;
+			var mark = diff1 * diff2; 
+			if(mark < 0){
+				if(interval++ > 0) 
+					return true;
+			}
+		}
+		return (interval > 0);
 	}
 	
 	Piece.prototype.getCenterXY = function(opt){
@@ -51,19 +73,7 @@ var ChineseChess={};
 		}
 		
 		Piece.prototype.objInRightBorder = function(objPos){return true;};
-		Piece.prototype.objReachable = function(objPos){return true;};
-		Piece.prototype.getBothPieces = function(){
-			var self , enemy;
-			if(this.type == RED){
-				self = chess.redPieces;
-				enemy = chess.blackPieces;
-			}else{
-				self = chess.blackPieces;
-				enemy = chess.redPieces;
-			}
-			return {self : self, enemy : enemy};
-		};
-
+		Piece.prototype.objReachable = function(objPos){return true;};		
 		
 		Piece.prototype.go = function(opt){
 			var objPos = this.getCenterXY(opt);
@@ -71,8 +81,22 @@ var ChineseChess={};
 			if(right){			
 				 var reachable = this.objReachable(objPos);
 				 if(reachable){
+				 	this.savedX = this.xCoor;
+					this.saveY = this.yCoor;
+					
 				 	this.xCoor = objPos.xCoor;
 				 	this.yCoor = objPos.yCoor;
+				 	if(this.hasPieceBetweenJiang()){
+				 		if(this.toeat){
+				 			this.toeat.alive = false;
+				 			this.toeat = null;
+				 		} 
+				 	}else{
+				 		this.xCoor = this.savedX;
+						this.yCoor = this.saveY;
+						this.toeat = null;
+						reachable = false;
+				 	}
 				 }
 				 return reachable;
 			}else
@@ -90,7 +114,7 @@ var ChineseChess={};
 		return (objPos.xCoor == this.xCoor || objPos.yCoor == this.yCoor);
 	}
 	Che.prototype.objReachable = function(objPos){
-		var p , all = chess.pieces, toeat;
+		var p , all = chess.pieces;
 		var reachable = true;
 		//纵向走子
 		if(objPos.xCoor == this.xCoor){
@@ -109,7 +133,7 @@ var ChineseChess={};
 					else{
 						//待吃子
 						reachable = true;
-						toeat = p;
+						this.toeat = p;
 					} 
 				}else{
 					reachable = false;
@@ -129,7 +153,7 @@ var ChineseChess={};
 					else{
 						//待吃子
 						reachable = true;
-						toeat = p;
+						this.toeat = p;
 					} 
 				}else{
 					reachable = false;
@@ -137,7 +161,6 @@ var ChineseChess={};
 				
 			}
 		}
-		if(reachable && toeat) toeat.alive = false;
 		return reachable;
 	}
 	
@@ -191,8 +214,9 @@ var ChineseChess={};
 			else{
 				//吃子
 				reachable = true;
-				p.alive = false;
+				this.toeat = p;
 			} 
+			return reachable;	
 		}
 		return reachable;	
 	}
@@ -238,8 +262,9 @@ var ChineseChess={};
 				else{
 					//吃子
 					reachable = true;
-					p.alive = false;
+					this.toeat = p;
 				} 
+				return reachable;	
 			}
 		}		
 		return reachable;
@@ -271,8 +296,9 @@ var ChineseChess={};
 			else{
 				//吃子
 				reachable = true;
-				p.alive = false;
+				this.toeat = p;
 			} 
+			return reachable;	
 		}		
 		return reachable;
 	}
@@ -307,8 +333,9 @@ var ChineseChess={};
 			else{
 				//吃子
 				reachable = true;
-				p.alive = false;
+				this.toeat = p;
 			} 
+			return reachable;	
 		}		
 		return reachable;
 	}
@@ -324,7 +351,7 @@ var ChineseChess={};
 	}	
 	
 	Pao.prototype.objReachable = function(objPos){
-		var p , all = chess.pieces, toeat, interval = 0;
+		var p , all = chess.pieces, interval = 0;
 		var reachable = true;		
 		//纵向走子
 		if(objPos.xCoor == this.xCoor){
@@ -343,7 +370,7 @@ var ChineseChess={};
 					else{
 						//待吃子
 						reachable = true;
-						toeat = p;
+						this.toeat = p;
 					} 
 				}else{
 					if(interval++ > 1)
@@ -364,7 +391,7 @@ var ChineseChess={};
 					else{
 						//待吃子
 						reachable = true;
-						toeat = p;
+						this.toeat = p;
 					} 
 				}else{
 					if(interval++ > 1)
@@ -373,8 +400,7 @@ var ChineseChess={};
 				
 			}
 		}
-		if(reachable && toeat && interval == 1) {toeat.alive = false;}
-		if(interval == 1 && !toeat) reachable = false;
+		if(interval == 1 && !this.toeat) reachable = false;
 		return reachable;
 	}
 	
@@ -404,8 +430,9 @@ var ChineseChess={};
 			else{
 				//吃子
 				reachable = true;
-				p.alive = false;
+				this.toeat = p;
 			} 
+			return reachable;	
 		}		
 		return reachable;
 	}
@@ -423,6 +450,7 @@ var ChineseChess={};
 		piece = new func[xCoor](xCoor,yCoor,BLACK);
 		blackPieces.push(piece);
 	}
+	redJiang = redPieces[4]; blackJiang = blackPieces[4];	
 	//炮
 	for(i = 1; i < vOffset.length; i = i + 6){
 		xCoor = i, yCoor = 2;	
