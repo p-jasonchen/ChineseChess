@@ -409,14 +409,17 @@ var ChineseChess={};
 		this.type == RED ? this.src = 'r_zu.png' : this.src = 'b_zu.png';		
 	}	
 	Zu.prototype = new Piece();
+	
 	Zu.prototype.objInRightBorder = function(objPos){
-		if(objPos.xCoor == this.xCoor){
-			var right = true;
+		var right = true;
+		if(objPos.xCoor == this.xCoor){			
 			this.type == RED && (objPos.yCoor - this.yCoor != 1) && (right = false);
 			this.type == BLACK && (objPos.yCoor - this.yCoor != -1) && (right = false);
 			return right;
 		}else if(objPos.yCoor == this.yCoor){
-			return Math.abs(objPos.xCoor - this.xCoor) == 1;
+			this.type == RED && this.yCoor <= 4 && (right = false);
+			this.type == BLACK && this.yCoor >= 5 && (right = false);
+			return right;
 		}
 		return false;
 	}
