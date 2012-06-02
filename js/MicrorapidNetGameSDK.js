@@ -6,18 +6,62 @@
 //todo: 参考jquery的noConflict 机制，可以对SDK重命名，防止和开发商的类冲突
 var MicrorapidNetGameSDK = {};
 (function(sdk) {
-
-	function isObject(param) {
+	
+	var Utils = function(){};
+	Utils.prototype.cleanString2Json = function(rspTxt){
+		var jsonData = window.JSON.parse(rspTxt);
+		var stringData = jsonData.data;		
+		var last = stringData.lastIndexOf('}');
+		stringData = stringData.substring(0,last+1);
+		jsonData = window.JSON.parse(stringData);
+		return jsonData;
+	}
+	Utils.prototype.getFriends = function(rspTxt){
+					
+		var jsonData = this.cleanString2Json(rspTxt);
+		//正常获取好友列表
+		if(jsonData.code == '1'){
+			frienListString = jsonData.list;
+			jsonFriends = window.JSON.parse(frienListString);
+		}
+	}
+	
+	Utils.prototype.getPayMoneyResult = function(rspTxt){
+		var jsonData = this.cleanString2Json(rspTxt);	
+	}
+	
+	Utils.prototype.getQueryMoneyResult = function(rstTxt){
+		var jsonData = this.cleanString2Json(rspTxt);
+	}
+	
+	Utils.prototype.isObject = function(param){
 		var b = (parma || typeof param == 'object');
 		return b;
 	}
-
-	function isFunction(param) {
+	
+	Utils.prototype.isFunction = function(param){
 		var b = (param || typeof param == 'function');
 		return b;
 	}
+	
+	Utils.prototype.getKeyValueReg = function(str) {
+	    var res = [];
+	    var reg = /(\w+)=([^&]+)/g;
+	    while ((a = reg.exec(str))) {
+	        res.push(a[0]);       
+	    }
+	    return res;
+	}
+	
+	var helper = new Utils();
+	
+	var AjaxType = {
+		getFriendList	: 1,
+		qcoins			: 2,
+		ppay			: 3,
+	}
 
-	var Ajax = function(opt) {
+	var Ajax = function(opt, ajaxType) {
 		if(window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
 			this.xmlhttp = new XMLHttpRequest();
 		} else {// code for IE6, IE5
@@ -29,17 +73,27 @@ var MicrorapidNetGameSDK = {};
 			if(xmlhttp.readyState == 4) {
 				switch(xmlhttp.status) {
 					case 0:
-						isFunction(opt.error) && opt.error(xmlhttp);
+						window.log('ajaxType:' + ajaxType);
+						helper.isFunction(opt.error) && opt.error(xmlhttp);break;
+					case 200:{
+						var jsonData;
+						switch(ajaxType){							
+							case AjaxType.getFriendList:
+								jsonData = helper.getFriends(xmlhttp.responseText);break;
+							case AjaxType.qcoins:
+								jsonData = helper.getQueryMoneyResult(xmlhttp.responseText);break;
+							case AjaxType.ppy:
+								jsonData = helper.getPayMoneyResult(xmlhttp.responseText);break;	
+						}
+						helper.isFunction(opt.success) && opt.success(jsonData);
 						break;
-					case 200:
-						isFunction(opt.success) && opt.success(xmlhttp.responseText, 200);
-						break;
+						}
 				}
 			}
 		}
 		var method, url, async = true;
 		
-		isFunction(opt.beforeSend) && opt.beforeSend(xmlhttp);
+		helper.isFunction(opt.beforeSend) && opt.beforeSend(xmlhttp);
 		opt.data && typeof opt.data == 'string' && ( method = 'POST');
 		if(!method) {
 			var type;
@@ -67,9 +121,10 @@ var MicrorapidNetGameSDK = {};
 		this.postUrl = "http://221.130.15.185:18000/json";		//dev
 		this.cookie = this.getCookie();
 	}
-	Proxy.prototype.doPost = function(postdata, successFunc, errorFunc) {
+	
+	Proxy.prototype.doPost = function(cmd, ajaxType ,successFunc, errorFunc) {
 		var jsonData = {
-			data : postdata,
+			data : cmd,
 			url : '1379/MLibok/main.swf',
 			//md5 : 'a5cea1eac184bb7f2bee9e99e79b8961',
 			md5	: 'c6e7c6a1b86042745fc64766b16bbe62',
@@ -80,12 +135,12 @@ var MicrorapidNetGameSDK = {};
 		window.log(stringData);
 		
 		var success,error;
-		isFunction(successFunc)? success = successFunc : success = function(data, textStatus) {
-				window.log('success' + textStatus);				
+		helper.isFunction(successFunc)? success = successFunc : success = function(jsonData) {
+				window.log('success' + jsonData);				
 
 		};
 		
-		isFunction(errorFunc) ? error = errorFunc : error = function(xhr) {
+		helper.isFunction(errorFunc) ? error = errorFunc : error = function(xhr) {
 				window.log('error' + xhr);
 		};
 		var opt = {
@@ -100,18 +155,11 @@ var MicrorapidNetGameSDK = {};
 				window.log('beforeSend' + xhr);
 			}
 		};		
-		new Ajax(opt);
+		new Ajax(opt, ajaxType);
 	}
 
 
-	var getKeyValueReg = function(str) {
-	    var res = [];
-	    var reg = /(\w+)=([^&]+)/g;
-	    while ((a = reg.exec(str))) {
-	        res.push(a[0]);       
-	    }
-	    return res;
-	};
+	
 	
 	Proxy.prototype.getCookie = function() {
 		var chromecookiefgdev = "token=PCDZ7QfsdDoHIiF1GkArgCesWJTthFT4zpkAAdbAFKIPa0fnyVtr0/BlpkyZ89WfDIotlb9dsUKyGK9ATvH5L2iENA/Z1ysFI9jv/GYqAL7LnkVLiyQlaconSB2CzGUo;appid=10002;gameid=1379;g_ut=3;PK=0;sid=AcWfxRIXEpKAmSjI_QqFhtc3;JumpURLExtraData=0|0|0|newwap|0|0;"
@@ -121,7 +169,7 @@ var MicrorapidNetGameSDK = {};
 			token = chromecookiefgdev;
 		else {			
 			paras = window.location.search;
-			ret = paras.getKeyValueReg(paras);
+			ret = helper.getKeyValueReg(paras);
 			token = ret.join(';');
 		}
 		return token;
@@ -134,7 +182,7 @@ var MicrorapidNetGameSDK = {};
 	 */
 	Proxy.prototype.getFriendList = function(successFunc, errorFunc) {		
 		window.log('getFriendList');
-		this.doPost('cmd=getFriendList', successFunc, errorFunc);
+		this.doPost('cmd=getFriendList', AjaxType.getFriendList, successFunc, errorFunc);
 	}
 
 	/**
@@ -144,7 +192,7 @@ var MicrorapidNetGameSDK = {};
 	 */
 	Proxy.prototype.queryAccountBalance = function(successFunc, errorFunc) {
 		window.log('queryAccountBalance');
-		this.doPost('cmd=qcoins', successFunc, errorFunc);
+		this.doPost('cmd=qcoins', AjaxType.qcoins, successFunc, errorFunc);
 	}
 	
 	/**
@@ -154,7 +202,7 @@ var MicrorapidNetGameSDK = {};
 	 */
 	Proxy.prototype.payMoney = function(goods, successFunc, errorFunc) {
 		window.log('payMoney');
-		this.doPost('cmd=ppay&' + goods.toString(), successFunc, errorFunc);
+		this.doPost('cmd=ppay&' + goods.toString(), AjaxType.ppay, successFunc, errorFunc);
 	}
 
 	/**
@@ -195,13 +243,15 @@ var MicrorapidNetGameSDK = {};
 			return s.join('');
 		}
 	}
+	
+	
 
 	sdk.Proxy = Proxy;
 	sdk.Goods = Goods;	
 	/*
 	sdk.getKeyValueRegTest = function(){
 		var a='?name=zhiyelee&blog=www.tsnrose.com&name=zhiyelee&blog=www.tsnrose.com&name=zhiyelee&blog=www.tsnrose.com';
-		return getKeyValueReg(a);
+		return helper.getKeyValueReg(a);
 	}
 	*/
 	
