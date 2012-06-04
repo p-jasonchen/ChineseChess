@@ -23,15 +23,18 @@ var MicrorapidNetGameSDK = {};
 		if(jsonData.code == '1'){
 			frienListString = jsonData.list;
 			jsonFriends = window.JSON.parse(frienListString);
+			return jsonFriends;
 		}
 	}
 	
 	Utils.prototype.getPayMoneyResult = function(rspTxt){
 		var jsonData = this.cleanString2Json(rspTxt);	
+		return jsonData;
 	}
 	
-	Utils.prototype.getQueryMoneyResult = function(rstTxt){
+	Utils.prototype.getQueryMoneyResult = function(rspTxt){
 		var jsonData = this.cleanString2Json(rspTxt);
+		return jsonData;
 	}
 	
 	Utils.prototype.isObject = function(param){
@@ -73,16 +76,17 @@ var MicrorapidNetGameSDK = {};
 			if(xmlhttp.readyState == 4) {
 				switch(xmlhttp.status) {
 					case 0:
-						window.log('ajaxType:' + ajaxType);
+						//window.log('ajaxType:' + ajaxType);
 						helper.isFunction(opt.error) && opt.error(xmlhttp);break;
 					case 200:{
 						var jsonData;
+						//window.log(xmlhttp.responseText);
 						switch(ajaxType){							
 							case AjaxType.getFriendList:
 								jsonData = helper.getFriends(xmlhttp.responseText);break;
 							case AjaxType.qcoins:
 								jsonData = helper.getQueryMoneyResult(xmlhttp.responseText);break;
-							case AjaxType.ppy:
+							case AjaxType.ppay:
 								jsonData = helper.getPayMoneyResult(xmlhttp.responseText);break;	
 						}
 						helper.isFunction(opt.success) && opt.success(jsonData);
@@ -103,7 +107,7 @@ var MicrorapidNetGameSDK = {};
 
 		opt.async && typeof opt.async == 'boolean' && ( async = opt.async);
 		opt.url && typeof opt.url == 'string' && ( url = opt.url);
-		window.log('method :' + method);
+		//window.log('method :' + method);
 		xmlhttp.open(method, url, async);
 		
 		if(opt.data){
@@ -132,7 +136,7 @@ var MicrorapidNetGameSDK = {};
 		};
 
 		var stringData = window.JSON.stringify(jsonData);
-		window.log(stringData);
+		//window.log(stringData);
 		
 		var success,error;
 		helper.isFunction(successFunc)? success = successFunc : success = function(jsonData) {
@@ -152,7 +156,7 @@ var MicrorapidNetGameSDK = {};
 			success : success,
 			error : error,
 			beforeSend : function(xhr) {
-				window.log('beforeSend' + xhr);
+				//window.log('beforeSend' + xhr);
 			}
 		};		
 		new Ajax(opt, ajaxType);

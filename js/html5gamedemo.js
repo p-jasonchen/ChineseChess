@@ -17,19 +17,21 @@
 	  	
 	}
 	
-	function showFriendList(data){
+	function showFriendList(jsonData){
+		/*
 	 	jsonData = window.JSON.parse(data);
 		stringData = jsonData.data;		
 		last = stringData.lastIndexOf('}');
 		stringData = stringData.substring(0,last+1);
 		////window.log('stringData:' + stringData);	
-		jsonData = window.JSON.parse(stringData);			
+		jsonData = window.JSON.parse(stringData);		
+		*/	
 		
 		//正常获取好友列表
-		if(jsonData.code == '1'){
-			frienListString = jsonData.list;
-			jsonFriends = window.JSON.parse(frienListString);
-			html = createFriendListHtml(jsonFriends);
+		if(jsonData){
+			//frienListString = jsonData.list;
+			//jsonFriends = window.JSON.parse(frienListString);
+			html = createFriendListHtml(jsonData);
 			$("#container").html(html);
 		}else{
 			var array = [];	
@@ -42,16 +44,18 @@
 		
 	}
 	
-	function showBuyPropResult(data){
+	function showBuyPropResult(jsonData){
+		/*
 		jsonData = window.JSON.parse(data);
 		stringData = jsonData.data;
 		last = stringData.lastIndexOf('}');
 		stringData = stringData.substring(0,last+1);
 		//window.log('stringData:' + stringData);	
-		jsonData = window.JSON.parse(stringData);		
+		jsonData = window.JSON.parse(stringData);	
+		*/	
 		
 		$(".result").show();
-		if(jsonData.code >= '0'){
+		if(jsonData){
 			$(".result .desc").html('单号：');			
 			$(".result .orderid").html(jsonData.orderid);
 		}else{
@@ -61,13 +65,15 @@
 		
 	}
 	
-	function showQueryMoneyResult(data){
+	function showQueryMoneyResult(jsonData){
+		/*
 		jsonData = window.JSON.parse(data);
 		stringData = jsonData.data;		
 		last = stringData.lastIndexOf('}');
 		stringData = stringData.substring(0,last+1);
 		//window.log('stringData:' + stringData);	
-		jsonData = window.JSON.parse(stringData);		
+		jsonData = window.JSON.parse(stringData);	
+		*/	
 		
 		var array = [];	
 		array.push('<div class="result"><ul class="horizontal_nav">');
