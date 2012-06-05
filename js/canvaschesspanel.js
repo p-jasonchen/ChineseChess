@@ -1,4 +1,8 @@
-( function(window) {"use strict";		
+( function(window) {"use strict";	
+
+		window.log = function(data){
+			window.console.log && window.console.log(data);
+		}	
 		
 		function absoluteCenter(canvas, span, offset){
 			var left = (document.body.clientWidth - canvas.width)/2;
@@ -25,17 +29,50 @@
 		}
 		
 		
+		var ChessSocket = function(){
+			try {
+				var ws = new WebSocket("ws://127.0.0.1:8080/demo");
+				ws.onopen = this.onOpen;
+                ws.onmessage = this.onMessage;
+                ws.onclose = this.onClose;
+                ws.onerror = this.onError;
+                this.ws = ws;
+			} catch (ex) {
+				
+			}
+
+			
+		}
+		
+		ChessSocket.prototype.onOpen = function(){
+			window.log('ChessSocket.prototype.onOpen');
+		}
+		
+		ChessSocket.prototype.onMessage = function(){
+			window.log('ChessSocket.prototype.onMessage');
+		}
+		
+		ChessSocket.prototype.onClose = function(){
+			window.log('ChessSocket.prototype.onClose');
+		}
+		
+		ChessSocket.prototype.onError = function(){
+			window.log('ChessSocket.prototype.onError');
+		}
+		
+		ChessSocket.prototype.send = function(msg){
+			this.ws && this.ws.send(msg);
+		}
+		
 		/*
 		 * CanvasChessPanel
 		 */
 		var CanvasChessPanel = function(id, opt) {
-			
+			var wsocket = new ChessSocket();
 			var CanvasChessPanel = new CanvasWrapper(id, opt);
 			CanvasChessPanel.width = 320;
-			CanvasChessPanel.height = 480;			
-			 
-
-			
+			CanvasChessPanel.height = 480;	
+						
 			CanvasChessPanel.draw = function () {
 		    	var c = this.con;	
 		    	if(this.chessPanelImg){			    	  	
@@ -130,7 +167,7 @@
 							var ret = that.selected.go({posX : canvasX, posY : canvasY});
 
 							if(ret){		
-
+								wsocket.send('data from browser');
 							}else{
 								alert('illegal go');
 							}
