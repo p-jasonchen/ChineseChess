@@ -34,6 +34,14 @@
 			PLAYER_IN : 3,   
 			PLAYER_OUT : 4,  
 			GAME_REQUEST : 5,
+			GAME_RESPONSE:6,
+		}
+		
+		var GameStatus = {
+			waiting: 0,
+			playing: 1,
+			over: 2,
+			myturn:3,
 		}
 		
 		function heart(chessSocket){
@@ -51,15 +59,24 @@
 			window.chessPanel.wsocket.send(window.JSON.stringify(req));
 		}
 		
+		var GameResponse = function(result, reqId){
+			var rsp = {
+				cmd: ChessProtocal.GAME_RESPONSE,
+				result: result,
+				playerId: reqId,
+			}
+			window.chessPanel.wsocket.send(window.JSON.stringify(rsp));
+		}
 		
-		var ChessSocket = function(){
+		var ChessSocket = function(chessPanel){			
 			try {
 				var ws = new WebSocket("ws://127.0.0.1:33601/demo");
 				ws.onopen = this.onOpen;
                 ws.onmessage = this.onMessage;
                 ws.onclose = this.onClose;
                 ws.onerror = this.onError;
-                this.ws = ws;               
+                ws.chessPanel = chessPanel;          
+                this.ws = ws;     
 			} catch (ex) {
 				
 			}
@@ -99,7 +116,20 @@
 				}
 				case ChessProtocal.GAME_REQUEST:{
 					var reqId = jsonMsg.playerId;
-					alert(reqId + '请求开始游戏');
+					var dialog = {
+						title:'游戏请求',
+						content:reqId + '发来游戏请求，是否同意？',
+						callbackone:function(){GameResponse(1, reqId)},
+						callbacktwo:function(){GameResponse(0, reqId)},
+						buttonone:'开始',
+						buttontwo:'拒绝',
+					}
+					
+					Component.MsgDialog.msgbox(dialog);break;
+				}
+				case ChessProtocal.GAME_RESPONSE:{
+					if(jsonMsg.result == 1)  this.chessPanel.gameStatus = GameStatus.myturn;
+					break;
 				}
 			}
 			window.log('ChessSocket.prototype.onMessage');
@@ -123,11 +153,13 @@
 		 * CanvasChessPanel
 		 */
 		var CanvasChessPanel = function(id, opt) {
-			var wsocket = new ChessSocket();
 			var CanvasChessPanel = new CanvasWrapper(id, opt);
+			var wsocket = new ChessSocket(CanvasChessPanel);
 			CanvasChessPanel.wsocket = wsocket;
 			CanvasChessPanel.width = 320;
-			CanvasChessPanel.height = 480;	
+			CanvasChessPanel.height = 480;				
+			CanvasChessPanel.gameStatus = GameStatus.waiting;
+			
 						
 			CanvasChessPanel.draw = function () {
 		    	var c = this.con;	
@@ -213,6 +245,8 @@
 			CanvasChessPanel.setClickCallBack = function(){
 					var that = this;
 					$(window).click(function(e) {
+					if(that.gameStatus != GameStatus.myturn)
+						return;
 					var canvasX = Math.floor(e.pageX-that.can.offsetLeft);
 					var canvasY = Math.floor(e.pageY-that.can.offsetTop);
 					if(that.selected){	
@@ -224,6 +258,7 @@
 
 							if(ret){		
 								wsocket.send('data from browser');
+								that.gameStatus = GameStatus.playing;
 							}else{
 								alert('illegal go');
 							}
