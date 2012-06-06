@@ -28,6 +28,29 @@
 				
 		}
 		
+		var ChessProtocal = {			
+			SET_PLAYER_ID :1,
+			MOVE_PIECE : 2,  
+			PLAYER_IN : 3,   
+			PLAYER_OUT : 4,  
+			GAME_REQUEST : 5,
+		}
+		
+		function heart(chessSocket){
+			//chessSocket.send('heart packet');
+			console.log('heart');
+			var t=setTimeout('heart()',4000)
+		}
+		
+		window.doGameRequest = function(anchor){
+			var playerId = anchor.innerHTML;
+			var req = {
+				cmd: ChessProtocal.GAME_REQUEST,
+				playerId : playerId,
+			}
+			window.chessPanel.wsocket.send(window.JSON.stringify(req));
+		}
+		
 		
 		var ChessSocket = function(){
 			try {
@@ -36,13 +59,15 @@
                 ws.onmessage = this.onMessage;
                 ws.onclose = this.onClose;
                 ws.onerror = this.onError;
-                this.ws = ws;
+                this.ws = ws;               
 			} catch (ex) {
 				
 			}
-
 			
 		}
+		
+		
+		
 		
 		ChessSocket.prototype.onOpen = function(Event){
 			var a = arguments;
@@ -55,23 +80,26 @@
 			var cmd = parseInt(jsonMsg.cmd);
 			switch(cmd){
 				//获取自己的playerID
-				case 1:{
-					var player = '<li class="player" value="' + jsonMsg.playerID + '">'+ jsonMsg.playerID +'</li>';
+				case ChessProtocal.SET_PLAYER_ID :{
+					var player = '<li class="player" value="' + jsonMsg.playerId + '"><a>'+ jsonMsg.playerId +'</a></li>';
 					$('#players ul').prepend(player);break;
 				}
-				case 2:{
+				case ChessProtocal.MOVE_PIECE:{
 					
 				}
 				//player in
-				case 3:{
-					var player = '<li class="player" value="' + jsonMsg.playerID + '">'+ jsonMsg.playerID +'</li>';	
+				case ChessProtocal.PLAYER_IN:{					
+					var player = '<li class="player" value="' + jsonMsg.playerId + '"><a href="#" onclick="javascript:doGameRequest(this)">'+ jsonMsg.playerId +'</a></li>';	
 					$('#players ul').append(player);break;
 				}
 				//player out
-				case 4:{
-					var selector = '#players ul li[value ="' + jsonMsg.playerID + '"]';
-					window.log(selector);
+				case ChessProtocal.PLAYER_OUT:{
+					var selector = '#players ul li[value ="' + jsonMsg.playerId + '"]';
 					$(selector).remove();break;
+				}
+				case ChessProtocal.GAME_REQUEST:{
+					var reqId = jsonMsg.playerId;
+					alert(reqId + '请求开始游戏');
 				}
 			}
 			window.log('ChessSocket.prototype.onMessage');
@@ -97,6 +125,7 @@
 		var CanvasChessPanel = function(id, opt) {
 			var wsocket = new ChessSocket();
 			var CanvasChessPanel = new CanvasWrapper(id, opt);
+			CanvasChessPanel.wsocket = wsocket;
 			CanvasChessPanel.width = 320;
 			CanvasChessPanel.height = 480;	
 						
@@ -257,3 +286,6 @@
 		
 		
 	}(window));
+	
+
+	

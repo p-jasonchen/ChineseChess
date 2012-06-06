@@ -15,3 +15,7 @@
 #players ul{
 	height: 100%;
 }
+
+#players ul li:first-child{
+	color: red;
+}
