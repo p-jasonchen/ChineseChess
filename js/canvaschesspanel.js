@@ -31,7 +31,7 @@
 		
 		var ChessSocket = function(){
 			try {
-				var ws = new WebSocket("ws://127.0.0.1:8080/demo");
+				var ws = new WebSocket("ws://127.0.0.1:33601/demo");
 				ws.onopen = this.onOpen;
                 ws.onmessage = this.onMessage;
                 ws.onclose = this.onClose;
@@ -44,19 +44,46 @@
 			
 		}
 		
-		ChessSocket.prototype.onOpen = function(){
+		ChessSocket.prototype.onOpen = function(Event){
+			var a = arguments;
 			window.log('ChessSocket.prototype.onOpen');
 		}
 		
-		ChessSocket.prototype.onMessage = function(){
+		ChessSocket.prototype.onMessage = function(MessageEvent){
+			var data = MessageEvent.data;
+			var jsonMsg = window.JSON.parse(data);
+			var cmd = parseInt(jsonMsg.cmd);
+			switch(cmd){
+				//获取自己的playerID
+				case 1:{
+					var player = '<li class="player" value="' + jsonMsg.playerID + '">'+ jsonMsg.playerID +'</li>';
+					$('#players ul').prepend(player);break;
+				}
+				case 2:{
+					
+				}
+				//player in
+				case 3:{
+					var player = '<li class="player" value="' + jsonMsg.playerID + '">'+ jsonMsg.playerID +'</li>';	
+					$('#players ul').append(player);break;
+				}
+				//player out
+				case 4:{
+					var selector = '#players ul li[value ="' + jsonMsg.playerID + '"]';
+					window.log(selector);
+					$(selector).remove();break;
+				}
+			}
 			window.log('ChessSocket.prototype.onMessage');
 		}
 		
-		ChessSocket.prototype.onClose = function(){
+		ChessSocket.prototype.onClose = function(Event){
+			var a = arguments;
 			window.log('ChessSocket.prototype.onClose');
 		}
 		
 		ChessSocket.prototype.onError = function(){
+			var a = arguments;
 			window.log('ChessSocket.prototype.onError');
 		}
 		

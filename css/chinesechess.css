@@ -4,4 +4,14 @@
 	min-height: 400px;
 }
 
+#players{
+	width : 100px;
+	height : 100%;
+	min-height: 400px;
+	float: left;
+	text-align: center;
+}
 
+#players ul{
+	height: 100%;
+}
