@@ -78,6 +78,7 @@ var ChineseChess={};
 		Piece.prototype.go = function(opt){
 			var objPos = this.getCenterXY(opt);
 			var right =  this.objInRightBorder(objPos);
+			var ret = {reachable: false};
 			if(right){			
 				 var reachable = this.objReachable(objPos);
 				 if(reachable){
@@ -88,6 +89,7 @@ var ChineseChess={};
 				 	this.yCoor = objPos.yCoor;
 				 	if(this.hasPieceBetweenJiang()){
 				 		if(this.toeat){
+				 			ret.beat = 1;
 				 			this.toeat.alive = false;
 				 			this.toeat = null;
 				 		} 
@@ -98,9 +100,10 @@ var ChineseChess={};
 						reachable = false;
 				 	}
 				 }
-				 return reachable;
+				 ret.reachable = reachable;				 
+				 return ret;
 			}else
-				return false;
+				return ret;
 		};
 	
 	
@@ -482,6 +485,8 @@ var ChineseChess={};
 	chess.pieces = redPieces.concat(blackPieces);
 	chess.hOffset = hOffset;
 	chess.vOffset = vOffset;
+	chess.RED = RED;
+	chess.BLACK = BLACK;
 	
 	chess.debug = function(log){
 		console.log(log);

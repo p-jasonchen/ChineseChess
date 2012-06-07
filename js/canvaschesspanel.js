@@ -34,7 +34,7 @@
 			PLAYER_IN : 3,   
 			PLAYER_OUT : 4,  
 			GAME_REQUEST : 5,
-			GAME_RESPONSE:6,
+			GAME_RESPONSE:6,			
 		}
 		
 		var GameStatus = {
@@ -65,6 +65,11 @@
 				result: result,
 				playerId: reqId,
 			}
+			if(result == 1){ 
+				$('#tips').html('等待对方先走棋...');
+				$('#piece_type').html('红方');
+			}
+			window.chessPanel.pieceType = ChineseChess.RED;
 			window.chessPanel.wsocket.send(window.JSON.stringify(rsp));
 		}
 		
@@ -102,10 +107,13 @@
 					$('#players ul').prepend(player);break;
 				}
 				case ChessProtocal.MOVE_PIECE:{
+					window.chessPanel.moveEnemyPiece(jsonMsg);		
+					$('#tips').html('对方走子完毕，请您走棋');			
+					break;
 					
-				}
+				}				
 				//player in
-				case ChessProtocal.PLAYER_IN:{					
+				case ChessProtocal.PLAYER_IN:{
 					var player = '<li class="player" value="' + jsonMsg.playerId + '"><a href="#" onclick="javascript:doGameRequest(this)">'+ jsonMsg.playerId +'</a></li>';	
 					$('#players ul').append(player);break;
 				}
@@ -128,7 +136,12 @@
 					Component.MsgDialog.msgbox(dialog);break;
 				}
 				case ChessProtocal.GAME_RESPONSE:{
-					if(jsonMsg.result == 1)  this.chessPanel.gameStatus = GameStatus.myturn;
+					if(jsonMsg.result == 1){
+						this.chessPanel.gameStatus = GameStatus.myturn;
+						this.chessPanel.pieceType = ChineseChess.BLACK;
+						$('#tips').html('对方接受邀请.您为黑方，请先走棋');
+						$('#piece_type').html('黑方');
+					}
 					break;
 				}
 			}
@@ -160,6 +173,37 @@
 			CanvasChessPanel.height = 480;				
 			CanvasChessPanel.gameStatus = GameStatus.waiting;
 			
+			CanvasChessPanel.moveEnemyPiece = function(jsonData){
+				var oldX = jsonData.oldX;
+				var oldY = jsonData.oldY;
+				var newX = jsonData.newX;
+				var newY = jsonData.newY;
+				var beat = jsonData.beat;
+				var pieces = this.pieces;
+				if(beat && beat == 1){
+					for(var i = 0; i < pieces.length; i++) {
+						var cur = pieces[i];
+						if(cur.alive) {						
+							if(cur.xCoor == newX && cur.yCoor == newY){								
+								cur.alive = false;break;
+							}
+						}
+					}
+				}
+		
+				for(var i = 0; i < pieces.length; i++) {
+					var cur = pieces[i];
+					if(cur.alive) {						
+						if(cur.xCoor == oldX && cur.yCoor == oldY){							
+							cur.xCoor = newX; 
+							cur.yCoor = newY;
+							break;
+						}
+					}
+				}
+				this.gameStatus = GameStatus.myturn;
+				this.draw();
+			}
 						
 			CanvasChessPanel.draw = function () {
 		    	var c = this.con;	
@@ -198,6 +242,7 @@
 			    	
 		    	}	
 			};
+			
 			
 			CanvasChessPanel.preDraw = function(){
 				var image = new Image();
@@ -254,11 +299,24 @@
 						if(that.selected.xCoor == objPos.xCoor && that.selected.yCoor == objPos.yCoor)	
 							that.selected = null;	
 						else{
+							if(that.selected.type != that.pieceType){
+								that.selected = null;return;
+							}
 							var ret = that.selected.go({posX : canvasX, posY : canvasY});
 
-							if(ret){		
-								wsocket.send('data from browser');
+							if(ret.reachable){	
+								var cur = that.selected;															
+								var go = {
+									cmd : ChessProtocal.MOVE_PIECE,
+									oldX : cur.savedX,
+									oldY : cur.saveY,
+									newX : cur.xCoor,
+									newY : cur.yCoor,
+									beat : ret.beat,
+								}
+								wsocket.send(window.JSON.stringify(go));
 								that.gameStatus = GameStatus.playing;
+								$('#tips').html('等待对方走棋...');
 							}else{
 								alert('illegal go');
 							}
