@@ -103,8 +103,13 @@
 			switch(cmd){
 				//获取自己的playerID
 				case ChessProtocal.SET_PLAYER_ID :{
-					var player = '<li class="player" value="' + jsonMsg.playerId + '"><a>'+ jsonMsg.playerId +'</a></li>';
-					$('#players ul').prepend(player);break;
+					if(jsonMsg.playerId){
+						var player = '<li class="player" value="' + jsonMsg.playerId + '"><a>昵称：'+ jsonMsg.playerId +'</a></li>';
+						$('#players ul').prepend(player);
+					}else{
+						$('#tips').html('抱歉，服务器拒绝请求，请稍后再试...');
+					}
+					break;
 				}
 				case ChessProtocal.MOVE_PIECE:{
 					window.chessPanel.moveEnemyPiece(jsonMsg);		
