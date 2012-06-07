@@ -28,7 +28,8 @@
 				
 		}
 		
-		var ChessProtocal = {			
+		var ChessProtocal = {	
+			HEART_BEAT : 0,		
 			SET_PLAYER_ID :1,
 			MOVE_PIECE : 2,  
 			PLAYER_IN : 3,   
@@ -44,10 +45,10 @@
 			myturn:3,
 		}
 		
-		function heart(chessSocket){
-			//chessSocket.send('heart packet');
-			console.log('heart');
-			var t=setTimeout('heart()',4000)
+		 window.heart = function(){	
+		 	var heart = {cmd: ChessProtocal.HEART_BEAT};	 	
+			window.window.chessPanel.wsocket.send(window.JSON.stringify(heart));	
+			window.t=setTimeout('heart()',4000);
 		}
 		
 		window.doGameRequest = function(anchor){
@@ -91,9 +92,9 @@
 		
 		
 		
-		ChessSocket.prototype.onOpen = function(Event){
-			var a = arguments;
+		ChessSocket.prototype.onOpen = function(Event){			
 			window.log('ChessSocket.prototype.onOpen');
+			window.heart();
 		}
 		
 		ChessSocket.prototype.onMessage = function(MessageEvent){
@@ -154,7 +155,7 @@
 		}
 		
 		ChessSocket.prototype.onClose = function(Event){
-			var a = arguments;
+			clearTimeout(window.t);
 			window.log('ChessSocket.prototype.onClose');
 		}
 		
