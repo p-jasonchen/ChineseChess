@@ -78,7 +78,7 @@ var ChineseChess={};
 		Piece.prototype.go = function(opt){
 			var objPos = this.getCenterXY(opt);
 			var right =  this.objInRightBorder(objPos);
-			var ret = {reachable: false};
+			var ret = {reachable: right};
 			if(right){			
 				 var reachable = this.objReachable(objPos);
 				 if(reachable){
@@ -414,14 +414,14 @@ var ChineseChess={};
 	Zu.prototype = new Piece();
 	
 	Zu.prototype.objInRightBorder = function(objPos){
-		var right = true;
+		var right = false;
 		if(objPos.xCoor == this.xCoor){			
-			this.type == RED && (objPos.yCoor - this.yCoor != 1) && (right = false);
-			this.type == BLACK && (objPos.yCoor - this.yCoor != -1) && (right = false);
+			this.type == RED && (objPos.yCoor - this.yCoor == 1) && (right = true);
+			this.type == BLACK && (objPos.yCoor - this.yCoor == -1) && (right = true);
 			return right;
 		}else if(objPos.yCoor == this.yCoor){
-			this.type == RED && this.yCoor <= 4 && (right = false);
-			this.type == BLACK && this.yCoor >= 5 && (right = false);
+			this.type == RED && this.yCoor >= 5 && Math.abs(objPos.xCoor - this.xCoor) == 1 && (right = true);
+			this.type == BLACK && this.yCoor <= 4 && Math.abs(objPos.xCoor - this.xCoor) == 1 && (right = true);
 			return right;
 		}
 		return false;
