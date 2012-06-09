@@ -74,9 +74,14 @@
 			window.chessPanel.wsocket.send(window.JSON.stringify(rsp));
 		}
 		
-		var ChessSocket = function(chessPanel){			
+		var ChessSocket = function(chessPanel){
+			var proxyServerIp = $('#PROXY_SERVER_IP').val();
+			if(proxyServerIp)
+				var url = 'ws://' + proxyServerIp + ':33601/demo';
+			else
+				var url = "ws://124.73.15.139:33601/demo";
 			try {
-				var ws = new WebSocket("ws://127.0.0.1:33601/demo");
+				var ws = new WebSocket(url);
 				ws.onopen = this.onOpen;
                 ws.onmessage = this.onMessage;
                 ws.onclose = this.onClose;
@@ -84,7 +89,7 @@
                 ws.chessPanel = chessPanel;          
                 this.ws = ws;     
 			} catch (ex) {
-				
+				$('#tips').html('您的浏览器暂不支持websocket哦...');
 			}
 			
 		}
@@ -156,11 +161,12 @@
 		
 		ChessSocket.prototype.onClose = function(Event){
 			clearTimeout(window.t);
+			$('#tips').html('抱歉，与服务器失去连接，请稍后再试...');
 			window.log('ChessSocket.prototype.onClose');
 		}
 		
 		ChessSocket.prototype.onError = function(){
-			var a = arguments;
+			$('#tips').html('抱歉，出错啦，请稍后再试...');
 			window.log('ChessSocket.prototype.onError');
 		}
 		
