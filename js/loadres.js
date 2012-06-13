@@ -66,7 +66,8 @@ var DownloadControler={};
 				'r_pao.png',		'r_zu.png',		'b_zu.png',
 				'b_pao.png',		'b_jiang.png',		'b_ma.png',
 				'b_shi.png',		'b_xiang.png',		'b_che.png',	
-				'ready.png',		'newgame.png',		
+				'ready.png',		'newgame.png',	'guide1.png',
+				'guide2.png',	'guide3.png',	'guide4.png',				
 			]
 		};	
 		
@@ -74,9 +75,12 @@ var DownloadControler={};
 			var opt = {
 				id : 'canvasChessPanel',				
 			};
+			var guideImgs = ['guide1.png','guide2.png',	'guide3.png',	'guide4.png',];
+			var guides = new Utils.Guide(guideImgs);
 			var chessPanel = new CanvasChessPanel('chess_frame', opt);		
 			chessPanel.pieces =  ChineseChess.pieces,
 			window.chessPanel = chessPanel;
+			
 		}	
 		
 		return img;
